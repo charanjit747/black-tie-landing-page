@@ -1,0 +1,145 @@
+// ============================================================
+// _reset.scss — Base Reset & Box Model
+// ============================================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 62.5%;
+  // Native smooth-scroll is intentionally left off — Lenis (see
+  // LenisProvider) owns all scroll easing; the two together would fight
+  // each other and stutter.
+  -webkit-text-size-adjust: 100%;
+}
+
+// The page scrolls (via Lenis) but never shows a scrollbar — hidden
+// cosmetically only, scrolling itself is untouched.
+html,
+body {
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // old Edge/IE
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome/Safari/Edge
+  }
+}
+
+// `html body` (not bare `body`) — Bootstrap also has a plain `body {}`
+// rule with its own font-size (a CSS variable), same specificity as a
+// bare `body` selector here, so whichever's CSS chunk lands last in
+// Turbopack's output was winning. The extra `html` ancestor gives this
+// one more specificity so it wins unconditionally, same fix as the
+// `body .container`/`body .row` overrides above.
+html body {
+  font-family: var(--font-dm-sans), 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+video,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--color-text-link);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--color-text-link-hover);
+  }
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+p {
+  color: var(--color-text-secondary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+// ── Bootstrap grid overrides ─────────────────────────────────
+// Project-wide .container / .container-fluid / .row sizing — this is
+// the one place that owns horizontal gutters now. Components use
+// react-bootstrap's <Container>/<Row> (which render these same classes)
+// rather than plain divs, but the actual sizing lives here.
+//
+// Prefixed with `body` (not just the bare class) so these win on
+// specificity alone (0,0,2,0 vs Bootstrap's 0,0,1,0) — that makes the
+// override immune to load order entirely, instead of depending on this
+// file's <link>/CSS chunk landing after bootstrap.min.css. Next's
+// Turbopack CSS chunking doesn't reliably preserve JS import order the
+// way Webpack's did, so relying on "we're imported later" was fragile.
+//
+// html{} is now font-size: 62.5%, i.e. 1rem = 10px sitewide — so these
+// read directly as their px/10 equivalents again.
+body .container {
+  & {
+    max-width: 175rem;
+    padding: 0 2rem;
+
+    @media (max-width: 1679px) {
+      max-width: 134rem;
+    }
+  }
+
+  &-fluid {
+    padding: 0 2rem;
+  }
+}
+
+body .row {
+  margin: 0 -2rem;
+
+  >div {
+    padding: 0 2rem;
+  }
+}

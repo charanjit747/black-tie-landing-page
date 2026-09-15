@@ -1,0 +1,47 @@
+// ============================================================
+// _hover-slide.scss — Shared "text duplicates & slides up" hover effect
+// Used inside CommonButton labels and nav links (Header, MobileMenu).
+// The parent `a`/`button` triggers the animation; this file only styles
+// the sliding track itself.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.hover-slide {
+  display: inline-block;
+  overflow: hidden;
+  height: 1.2em;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
+.hover-slide__track {
+  display: flex;
+  flex-direction: column;
+  @include smooth-transition(transform, 0.5s);
+  transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.hover-slide__row {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  height: 1.2em;
+  white-space: nowrap;
+}
+
+// Any interactive ancestor triggers the slide — a real link/button, or
+// any element opted in with `.hover-slide-trigger` (e.g. a non-link row
+// like the hero ticker items).
+a:hover .hover-slide__track,
+button:hover .hover-slide__track,
+.hover-slide-trigger:hover .hover-slide__track {
+  transform: translateY(-50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-slide__track {
+    transition: none;
+  }
+}

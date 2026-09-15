@@ -1,0 +1,153 @@
+// ============================================================
+// _mobile-menu.scss — Full-screen premium mobile nav
+// Opened/closed via GSAP in MobileMenu.tsx (display + autoAlpha are
+// driven from JS — this file only owns layout/appearance).
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal;
+  display: none; // toggled to flex by GSAP
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: $spacing-2xl;
+  padding: $spacing-2xl $spacing-xl;
+  overflow: hidden; // clips the strips while they're mid-slide
+
+  @include respond-to('xl') {
+    display: none !important; // desktop uses the inline nav instead
+  }
+
+  // ── Background strips ─────────────────────────────────────
+  // The background isn't one solid panel — it's split into 4 vertical
+  // strips (see BG_STRIP_COUNT in MobileMenu.tsx), each extending from
+  // its own left edge out to the right (scaleX, transform-origin: left)
+  // rather than sliding in. They share one continuous gradient image,
+  // each showing its own slice of it (via background-position, set
+  // inline per-strip), so once landed they read as a single seamless
+  // background — matching the reference demo's `<li><i></i></li>` list.
+  &__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  &__bg-strip {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    transform-origin: left center;
+    // Top→bottom version — swap this back in (and the matching scaleY
+    // tween in MobileMenu.tsx) to restore it.
+    // transform-origin: top center;
+    // Light theme keeps the subtle gradient (still theme-token driven);
+    // dark theme is a flat solid — no gradient — per the exact color below.
+    background-image: linear-gradient(
+      160deg,
+      var(--color-bg-primary) 0%,
+      var(--color-bg-secondary) 55%,
+      var(--color-bg-primary) 100%
+    );
+    background-size: 400% 100%; // 400% = 100% × BG_STRIP_COUNT (4)
+    // A neutral, low-alpha gray rather than --color-border — that token
+    // is quite dark/visible in both themes; this reads as a faint seam
+    // instead, in light or dark.
+    border-right: 1px solid rgba(128, 128, 128, 0.08);
+
+    [data-theme='dark'] & {
+      background-image: none;
+      background-color: #0c0c0c;
+    }
+
+    &:last-child {
+      border-right: none;
+    }
+  }
+
+  &__close {
+    position: absolute;
+    z-index: 1;
+    top: $spacing-lg;
+    right: $spacing-lg;
+    @include flex-center;
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-full;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    @include smooth-transition;
+
+    &:hover {
+      background: var(--color-border);
+      transform: rotate(90deg);
+    }
+  }
+
+  &__nav {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-md;
+    text-align: left;
+  }
+
+  &__link {
+    font-family: $font-family-heading;
+    // Sized so the longest label ("Partner With Us") never wraps to a
+    // second line, down to a 320px-wide screen with this panel's padding.
+    font-size: clamp(2.4rem, 7.5vw, 4.4rem); // 24px–44px (1rem = 10px)
+    font-weight: $font-weight-black;
+    text-transform: uppercase;
+    color: var(--color-text-primary);
+    text-decoration: none;
+    line-height: 1.15;
+    opacity: 0.85;
+    will-change: transform, opacity;
+    @include smooth-transition(opacity, $transition-fast);
+
+    &:hover,
+    &--active {
+      opacity: 1;
+      color: var(--color-brand-accent);
+    }
+  }
+
+  &__actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: $spacing-md;
+    width: 100%;
+    max-width: 340px;
+
+    .btn-common {
+      width: 100%;
+    }
+
+    // The header's `ghost` variant is deliberately theme-invariant (glass,
+    // always white-on-dark) because it always sits over the hero art.
+    // In here it sits on this themed panel instead, so it needs to react
+    // to the theme like everything else in the menu.
+    .btn-common--ghost {
+      background: transparent;
+      border-color: var(--color-border-strong);
+      color: var(--color-text-primary);
+
+      &:hover {
+        background: var(--color-bg-tertiary);
+        color: var(--color-text-primary);
+      }
+    }
+  }
+}

@@ -1,0 +1,146 @@
+// ============================================================
+// _mixins.scss — Reusable SCSS Mixins
+// ============================================================
+
+@use 'variables' as *;
+
+// ── Media Queries ────────────────────────────────────────────
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == 'xs' {
+    @media (min-width: #{$bp-xs}) { @content; }
+  } @else if $breakpoint == 'sm' {
+    @media (min-width: #{$bp-sm}) { @content; }
+  } @else if $breakpoint == 'md' {
+    @media (min-width: #{$bp-md}) { @content; }
+  } @else if $breakpoint == 'lg' {
+    @media (min-width: #{$bp-lg}) { @content; }
+  } @else if $breakpoint == 'xl' {
+    @media (min-width: #{$bp-xl}) { @content; }
+  } @else if $breakpoint == '2xl' {
+    @media (min-width: #{$bp-2xl}) { @content; }
+  } @else if $breakpoint == 'narrow-desktop' {
+    @media (min-width: #{$bp-narrow-desktop}) { @content; }
+  }
+}
+
+@mixin respond-below($breakpoint) {
+  @if $breakpoint == 'xs' {
+    // Below the smallest named breakpoint — for the last bit of tightening
+    // small phones (down to 320px) still need beyond the 'sm' cutoff.
+    @media (max-width: #{$bp-xs - 1}) { @content; }
+  } @else if $breakpoint == 'sm' {
+    @media (max-width: #{$bp-sm - 1}) { @content; }
+  } @else if $breakpoint == 'md' {
+    @media (max-width: #{$bp-md - 1}) { @content; }
+  } @else if $breakpoint == 'lg' {
+    @media (max-width: #{$bp-lg - 1}) { @content; }
+  } @else if $breakpoint == 'xl' {
+    @media (max-width: #{$bp-xl - 1}) { @content; }
+  } @else if $breakpoint == 'narrow-desktop' {
+    // The master "small desktop" shrink point — see $bp-narrow-desktop.
+    @media (max-width: #{$bp-narrow-desktop - 1}) { @content; }
+  }
+}
+
+// ── Flexbox Helpers ──────────────────────────────────────────
+@mixin flex($direction: row, $justify: flex-start, $align: stretch, $wrap: nowrap) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+  flex-wrap: $wrap;
+}
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+// ── Positioning ──────────────────────────────────────────────
+@mixin absolute-fill {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+}
+
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// ── Typography ───────────────────────────────────────────────
+@mixin text-truncate($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@mixin heading-style($size: $font-size-2xl, $weight: $font-weight-bold) {
+  font-family: $font-family-heading;
+  font-size: $size;
+  font-weight: $weight;
+  line-height: $line-height-tight;
+}
+
+// ── Visual Effects ───────────────────────────────────────────
+@mixin glass($opacity: 0.1, $blur: 10px) {
+  background: rgba(255, 255, 255, $opacity);
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid rgba(255, 255, 255, $opacity * 1.5);
+}
+
+@mixin gradient-text($from, $to, $direction: 135deg) {
+  background: linear-gradient($direction, $from, $to);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@mixin smooth-transition($props: all, $duration: $transition-base) {
+  transition: $props $duration;
+}
+
+// ── Focus Ring (Accessibility) ───────────────────────────────
+@mixin focus-ring($color: var(--color-brand-accent)) {
+  &:focus-visible {
+    outline: 2px solid $color;
+    outline-offset: 2px;
+  }
+}
+
+// ── Scrollbar ────────────────────────────────────────────────
+@mixin custom-scrollbar($width: 6px, $track: var(--color-bg-tertiary), $thumb: var(--color-brand-accent)) {
+  scrollbar-width: thin;
+  scrollbar-color: $thumb $track;
+
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $track;
+    border-radius: $radius-full;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $thumb;
+    border-radius: $radius-full;
+  }
+}

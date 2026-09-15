@@ -1,0 +1,396 @@
+// ============================================================
+// _button.scss — CommonButton Styles
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.btn-common {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  font-family: $font-family-base;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+  line-height: 1; // buttons shouldn't inherit body copy's 1.5 line-height —
+                  // that was inflating every pill well past its padding
+  letter-spacing: 0.025em;
+  border-radius: $radius-md;
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  @include smooth-transition(all, $transition-base);
+  @include focus-ring();
+
+  // ── Standard look: a rounded arrow badge on each side ──────
+  // Every default CommonButton (not just ones with an explicit icon prop)
+  // gets the same small rounded-circle arrow badge flanking its label —
+  // left one hidden at rest, right one visible. On hover they swap
+  // prominence (left "zooms in", right "zooms out" at the same time) so
+  // it reads as a quick pop rather than anything sliding around. The
+  // label itself never moves.
+  &__text {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .btn-icon-pop {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.8rem;  // 28px rounded badge (1rem = 10px)
+    height: 2.8rem;
+    flex-shrink: 0;
+    border: 1.5px solid currentColor;
+    border-radius: 9999px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    &--left {
+      transform: scale(0);
+      opacity: 0;
+    }
+
+    &--right {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  &:hover .btn-icon-pop--left {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  &:hover .btn-icon-pop--right {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  // ── Ripple effect ────────────────────────────────────────
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.15);
+    opacity: 0;
+    transition: opacity $transition-fast;
+  }
+
+  &:active::after {
+    opacity: 1;
+  }
+
+  // HoverSlideText's `.hover-slide`/`.hover-slide__row` (see
+  // _hover-slide.scss) hardcode their own 1.2em row height for its
+  // general nav-link/ticker use — inside a button that ignores it,
+  // inflating the pill's total height past whatever this file's own
+  // line-height for the size says. Default here matches the base rule's
+  // own `line-height: 1` above (1em); size blocks below override this
+  // with their own explicit value where they set a different line-height
+  // (e.g. --lg) — same selector specificity, so source order decides,
+  // and those come later.
+  .hover-slide,
+  .hover-slide__row {
+    height: 1em;
+  }
+
+  // ── Sizes ────────────────────────────────────────────────
+  &--sm {
+    padding: 0.8rem 2rem; // 8px / 20px (1rem = 10px)
+    font-size: $font-size-xs;
+    border-radius: 9999px;
+  }
+
+  &--md {
+    padding: 1.2rem 2.8rem; // 12px / 28px (1rem = 10px)
+    font-size: $font-size-sm;
+    border-radius: 9999px;
+  }
+
+  &--lg {
+    // Matches Figma's pill spec exactly (20px / medium) — this is the
+    // default size, used for every header/hero pill (Referral, Login,
+    // Get Started), and it stays this size at $bp-narrow-desktop and up.
+    // Figma's text sits at leading-[16px] (tighter than its own 20px font
+    // size, not the base rule's line-height: 1) — without this override
+    // the pill was rendering ~4px taller than Figma on each of these
+    // (48px content-box tall in Figma vs. 52px here), reading as "bigger".
+    padding: 1.6rem 2.5rem; // 16px / 25px (1rem = 10px)
+    font-size: 2rem;        // 20px (1rem = 10px)
+    line-height: 1.6rem;    // 16px, matches Figma's leading-[16px]
+    font-weight: $font-weight-medium;
+    border-radius: 9999px;
+
+    // HoverSlideText's `.hover-slide`/`.hover-slide__row` (see
+    // _hover-slide.scss) hardcode their own 1.2em row height for general
+    // nav-link/ticker use — inside this button that ignored the
+    // line-height set just above, so the pill kept rendering ~24px tall
+    // per row instead of this size's actual 16px, 8px taller overall than
+    // Figma. Plain rem (not `1lh`, unsupported in some renderers) pins it
+    // to the same value as this size's own line-height. Declared BEFORE
+    // the narrow-desktop media query below (same selector specificity —
+    // whichever comes later in the stylesheet wins at that breakpoint).
+    .hover-slide,
+    .hover-slide__row {
+      height: 1.6rem;
+    }
+
+    // Global size-down for small desktops — see $bp-narrow-desktop. Same
+    // button, same API, just more compact so it still fits comfortably
+    // once the viewport gets tighter than a full desktop monitor.
+    @include respond-below('narrow-desktop') {
+      padding: 1.2rem 2rem;  // 12px / 20px (1rem = 10px)
+      font-size: 1.7rem;     // 17px (1rem = 10px)
+      line-height: 1.36rem;  // keeps the same 0.8 line-height ratio
+
+      // HoverSlideText's own row height must shrink in step — declared
+      // after the unconditional 1.6rem above so it wins at this breakpoint.
+      .hover-slide,
+      .hover-slide__row {
+        height: 1.36rem;
+      }
+    }
+  }
+
+  &--xl {
+    padding: 1.6rem 4.8rem; // 16px / 48px (1rem = 10px)
+    font-size: $font-size-md;
+    border-radius: 9999px;
+    height: 60px;
+  }
+
+  // ── Attached icon-cap (Figma "Get Started" CTA) ───────────
+  // Circle is the SAME height as the label (both exactly 50px, per
+  // Figma's literal spec) and sits flush next to it — no vertical bulge,
+  // no horizontal overlap into the label's box. The outer element is an
+  // invisible hit-box only: the label pill and the icon circle are two
+  // independently-shaped, independently-colored children. Still one
+  // single clickable element — the two "pieces" are purely visual.
+  &--attached {
+    --cta-label-h: 50px;
+    --cta-circle-d: 50px;
+
+    // Same global small-desktop size-down as the rest of --lg.
+    @include respond-below('narrow-desktop') {
+      --cta-label-h: 44px;
+      --cta-circle-d: 44px;
+    }
+
+    position: relative;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0;
+    padding-right: var(--cta-circle-d); // full diameter reserved — the
+                                         // circle sits entirely in this
+                                         // space, touching but not
+                                         // overlapping the label at rest
+    gap: 0;
+    min-height: var(--cta-circle-d);
+    border-radius: 0;
+    // overflow: hidden is inherited from the base rule above — label and
+    // height now match exactly, so it's safe, and it's what clips the
+    // hover swap below to a clean crossing instead of spilling outside.
+
+    &::after {
+      content: none; // the ripple effect assumes a filled, clipped shape
+    }
+
+    &:hover,
+    &:active {
+      transform: none !important; // the lift/press effects also assumed
+                                   // a single filled shape — the lobes
+                                   // handle their own hover feedback below
+    }
+  }
+
+  &--pill {
+    border-radius: 9999px !important;
+  }
+
+  // ── Variants (Theme Reactive) ──────────────────────────────
+  // Primary Button (Light Theme = Black Btn | Dark Theme = White Btn)
+  &--primary {
+    background-color: var(--color-btn-primary-bg);
+    color: var(--color-btn-primary-text);
+    border: 1.5px solid var(--color-btn-primary-bg);
+
+    &:hover {
+      background-color: var(--color-btn-primary-hover);
+      border-color: var(--color-btn-primary-hover);
+      color: var(--color-btn-primary-text);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+  }
+
+  // Secondary Button (Light Theme = White Btn | Dark Theme = Black Btn)
+  &--secondary {
+    background-color: var(--color-btn-secondary-bg);
+    color: var(--color-btn-secondary-text);
+    border: 1.5px solid var(--color-btn-secondary-bg);
+
+    &:hover {
+      background-color: var(--color-btn-secondary-hover);
+      border-color: var(--color-btn-secondary-hover);
+      color: var(--color-btn-secondary-text);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+  }
+
+  // Ghost Button — glass pill, theme-invariant (always white-on-dark).
+  // Used for controls placed over fixed dark artwork, e.g. the header's
+  // "Become a Referral Partner" pill and other hero/overlay actions.
+  &--ghost {
+    @include glass(0.1, 12px);
+    color: #fff;
+    border-width: 1px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  // Light Button — always white bg / black text, regardless of site theme.
+  // Used on top of fixed dark artwork (e.g. the hero "Get Started" CTA)
+  // where the button must not flip with the light/dark toggle.
+  &--light {
+    background-color: #fff;
+    color: #000;
+    border: 1.5px solid #fff;
+
+    &:hover {
+      background-color: #f2f2f2;
+      border-color: #f2f2f2;
+      color: #000;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+  }
+
+  // ── States ───────────────────────────────────────────────
+  &--loading {
+    pointer-events: none;
+    opacity: 0.75;
+
+    .btn-spinner {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: $radius-full;
+      animation: btn-spin 0.65s linear infinite;
+    }
+  }
+
+  &--disabled,
+  &:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+
+  &--block {
+    width: 100%;
+  }
+
+  // ── Icon Only ────────────────────────────────────────────
+  &--icon-only {
+    padding: $spacing-sm;
+    border-radius: $radius-full;
+    aspect-ratio: 1;
+
+    svg {
+      pointer-events: none;
+    }
+  }
+
+  // ── Attached icon-cap children (see &--attached above) ────
+  // These carry their own background/shape now — the outer element is
+  // just a transparent hit-box (see &--attached).
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    height: var(--cta-label-h, 54px);
+    padding: 0 2.5rem; // 25px, matches the pill's own horizontal padding (1rem = 10px)
+    border-radius: 9999px;
+    transition: background-color $transition-base;
+
+    @include respond-below('narrow-desktop') {
+      padding: 0 2rem; // 20px, matches --lg's own shrink below this point (1rem = 10px)
+    }
+  }
+
+  &__icon-cap {
+    @include flex-center;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: var(--cta-circle-d, 68px);
+    height: var(--cta-circle-d, 68px);
+    border-radius: 50%;
+    flex-shrink: 0;
+    pointer-events: none; // clicks still land on the parent <a>/<button>
+    transition: background-color $transition-base;
+    // Static icon, no hover animation — just this background-color tint.
+
+    svg {
+      width: 16px;
+      height: 15px;
+    }
+  }
+
+  // Theme-reactive, same tokens as the `secondary` variant (confirmed
+  // against Figma: white pill/black text in Home-Light, #0c0c0c pill/
+  // #efefef text in Home-Dark) — this CTA is paired with variant="secondary",
+  // not "light", so it needs to read from the theme, not a fixed color.
+  &--attached &__label,
+  &--attached &__icon-cap {
+    background-color: var(--color-btn-secondary-bg);
+    color: var(--color-btn-secondary-text);
+  }
+
+  &--attached:hover &__label,
+  &--attached:hover &__icon-cap {
+    background-color: var(--color-btn-secondary-hover);
+  }
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}

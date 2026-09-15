@@ -1,0 +1,202 @@
+// ============================================================
+// _hero.scss — Homepage Hero Section
+//
+// The hero card's background art + copy are theme-invariant by design
+// (Figma shows the exact same dark artwork under Home-Light & Home-Dark) —
+// only the header's Login pill reacts to theme, not the hero itself.
+// Content is bottom-aligned inside the card, matching Figma.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.hero {
+  padding: 2rem; // 20px exactly, per Figma's 20px inset on the hero card (1rem = 10px)
+
+  @include respond-below('md') {
+    padding: $spacing-sm;
+  }
+}
+
+.hero__card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 22px;
+  min-height: clamp(560px, 92vh, 970px);
+
+  @include respond-to('lg') {
+    border-radius: 34px;
+  }
+}
+
+// ── Background video ───────────────────────────────────────
+.hero__bg-video {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: #050505; // shows while the video source loads
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// ── Body: header clearance up top, everything else bottom-aligned ──
+.hero__body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: $spacing-2xl;
+  padding-top: clamp(9.6rem, 13vw, 13.6rem); // clears the fixed header (1rem = 10px)
+  padding-bottom: 2rem; // tighter than the shared $spacing-xl — less air below the ticker row
+
+  @include respond-below('md') {
+    padding-top: 8.8rem; // 1rem = 10px
+    gap: $spacing-xl;
+  }
+}
+
+// Horizontal gutter/max-width comes from the shared `.container` class
+// (see _reset.scss) applied alongside this one in Hero.tsx — only the
+// content-specific layout lives here.
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2.8rem; // tighter than the shared $spacing-2xl — tag/title/CTA stack
+
+  // Center-aligned on mobile — the left-aligned desktop layout doesn't
+  // read as well once everything's stacked full-width on a small screen.
+  @include respond-below('md') {
+    align-items: center;
+    text-align: center;
+    gap: $spacing-lg;
+  }
+}
+
+// ── Eyebrow tag pill ─────────────────────────────────────────
+.hero__tag {
+  @include glass(0.1, 23px);
+  display: inline-block;
+  padding: $spacing-sm $spacing-xl;
+  border-radius: $radius-full;
+  border-width: 0.5px;
+  font-family: $font-family-heading;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  color: #fff;
+  max-width: 100%;
+
+  @include respond-below('sm') {
+    font-size: $font-size-sm;
+    padding: $spacing-xs $spacing-lg;
+  }
+}
+
+// ── Headline ─────────────────────────────────────────────────
+.hero__title {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem; // tighter than the shared $spacing-lg — just the two title lines
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  color: #fff;
+  margin: 0;
+}
+
+// Both lines share one common font-size/line-height — only the color
+// (opacity) differs between them, not the size.
+.hero__title-line {
+  font-weight: $font-weight-bold;
+  color: #fff;
+  font-size: clamp(3.2rem, 5.6vw, 9rem); // 32px–90px (1rem = 10px)
+  line-height: 1.15;
+
+  &--muted {
+    color: rgba(255, 255, 255, 0.6); // 60% white, not opacity — keeps the
+                                      // mask/split spans fully opaque so
+                                      // the reveal animation isn't dimmed
+  }
+}
+
+// ── CTA row ──────────────────────────────────────────────────
+// One single clickable button (whole pill navigates) — the arrow is a
+// decorative trailing icon, not a separate control.
+.hero__cta {
+  position: relative;
+  z-index: 2; // stay clickable above the background art
+  pointer-events: auto;
+}
+
+// Button itself is always white/black regardless of theme — it sits on
+// the fixed dark hero artwork in both Home-Light and Home-Dark (handled
+// by CommonButton's `light` variant + `attachedIcon` split-pill render;
+// the lobes' own hover tint lives in _button.scss alongside the shape).
+
+// ── Ticker row ───────────────────────────────────────────────
+// One row of 4 on tablet/desktop; on mobile it breaks into a 2×2 grid
+// with a smaller font instead of cramming 4 across a narrow screen.
+// Horizontal gutter/max-width comes from the shared `.container` class
+// (see _reset.scss), same as .hero__content above.
+.hero__ticker {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xl;
+
+  @include respond-below('md') {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 $spacing-lg;
+  }
+
+  // Below 480px even 2 columns feels cramped — single column instead.
+  @media (max-width: 479px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hero__ticker-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  flex: 1 0 0;
+  min-width: max-content;
+  padding: $spacing-md $spacing-sm;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  font-family: $font-family-heading;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: #fff;
+  text-decoration: none;
+  text-transform: capitalize;
+  white-space: nowrap;
+  cursor: pointer;
+  @include smooth-transition(opacity, $transition-fast);
+  @include focus-ring(#fff);
+
+  @include respond-below('md') {
+    flex: none;
+    min-width: 0;
+    gap: $spacing-xs;
+    padding: $spacing-sm $spacing-xs;
+    font-size: clamp(1.2rem, 3.2vw, 1.5rem); // 12px–15px (1rem = 10px)
+  }
+
+  &:hover {
+    opacity: 0.75;
+    color: #fff;
+  }
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.85;
+  }
+}

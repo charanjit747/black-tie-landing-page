@@ -1,0 +1,240 @@
+// ============================================================
+// _header.scss — Header / Navbar Styles
+//
+// Two visual states — neither one changes any color, ever. The header
+// looks identical regardless of the light/dark theme toggle and
+// regardless of scroll position; only the background treatment differs:
+//  --transparent : fully see-through, floating over the homepage hero
+//                  (inset 49px from the top, exactly as in Figma) —
+//                  only true at the very top of the homepage.
+//  --solid       : a fixed dark background (not theme-driven — it's the
+//                  same dark value in both themes) plus a 1rem
+//                  backdrop-filter blur. Used once scrolled on the
+//                  homepage, and always on every inner page (there's no
+//                  hero behind those to float over).
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Figma: header sits 49px from the top of the artboard on both
+// Home-Light and Home-Dark.
+$header-inset-top: 3.2rem; // reduced from Figma's 49px — 32px, a bit tighter
+
+// Header-only widened container — bumps just the header's max-width past
+// the shared `.container` (see _reset.scss) without touching every other
+// section that also uses `.container`. `body .container.site-header__container`
+// keeps 3 levels of specificity (vs. the shared rule's 2) so this wins
+// unconditionally, immune to Turbopack's CSS chunk load order.
+body .container.site-header__container {
+  max-width: 177rem; // 1770px (1rem = 10px)
+}
+
+.site-header {
+  position: fixed;
+  top: $header-inset-top;
+  left: 0;
+  right: 0;
+  z-index: $z-sticky;
+  transition:
+    top $transition-slow,
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); // smooth reveal on scroll-up
+
+  @include respond-below('md') {
+    top: $spacing-md;
+  }
+
+  // Slides out of view past 50px of scroll-down; reappears on scroll-up.
+  // -100% only clears the header's OWN height — it still sits `top` away
+  // from the viewport edge on top of that, so the translate has to clear
+  // both distances (plus a buffer) or a sliver of the header is left
+  // peeking in from the bottom.
+  &--hidden {
+    transform: translateY(calc(-100% - #{$header-inset-top} - #{$spacing-xl}));
+    transition:
+      top $transition-slow,
+      transform 0.3s cubic-bezier(0.7, 0, 0.84, 0); // quick exit
+
+    @include respond-below('md') {
+      transform: translateY(calc(-100% - #{$spacing-md} - #{$spacing-xl}));
+    }
+  }
+
+  // Horizontal sizing/gutter comes from the shared `.container` class
+  // (see _reset.scss), widened for the header only via `&__container`
+  // just below — only the header-specific look lives here otherwise.
+  &__inner {
+    @include flex-between;
+    padding-top: $spacing-sm;
+    padding-bottom: $spacing-sm;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border-radius: $radius-full;
+    @include smooth-transition(background-color, $transition-slow);
+  }
+
+  // ── Transparent state (home, at the very top only) ────────
+  &--transparent &__inner {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  // ── Blurred state (home, once scrolled) ────────────────────
+  // NO background color at all — only a blur, plus a soft white glow to
+  // separate it from whatever's scrolling behind it. Nothing behind the
+  // header changes color, ever.
+  &--blurred &__inner {
+    background: transparent;
+    backdrop-filter: blur(1rem);
+    -webkit-backdrop-filter: blur(1rem);
+    box-shadow: 0 0 0.4rem rgba(255, 255, 255, 0.1);
+  }
+
+  // ── Solid state (any inner page, always) ───────────────────
+  // A fixed dark background — literally the same #111827 already used
+  // for --color-header-bg in the dark theme, hardcoded rather than read
+  // from the CSS variable so it never changes with the light/dark
+  // toggle. Fully opaque, so no blur is needed here.
+  &--solid &__inner {
+    background-color: #111827;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  &__logo {
+    @include flex(row, flex-start, center);
+    flex-shrink: 0;
+    line-height: 0;
+    @include smooth-transition;
+
+    img {
+      width: 130px;
+      height: auto;
+
+      @include respond-to('lg') {
+        width: 150px;
+      }
+    }
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  &__nav {
+    display: none;
+
+    // The desktop nav/Referral/hamburger toggle happens at a normal 'xl'
+    // (1200px) breakpoint — that's independent of $bp-narrow-desktop.
+    // $bp-narrow-desktop only controls whether things are full-size or
+    // shrunk (buttons AND these nav links); it never decides whether the
+    // hamburger shows.
+    @include respond-to('xl') {
+      @include flex(row, center, center);
+      gap: $spacing-xs;
+    }
+
+    // Below $bp-narrow-desktop, tighten the gap alongside the shrunk
+    // nav-link padding/font (see &__nav-link below).
+    @include respond-below('narrow-desktop') {
+      gap: 0;
+    }
+  }
+
+  // Same visibility rule as &__nav above — kept as its own class (rather
+  // than a Bootstrap d-* utility) so both are driven by the one nav
+  // breakpoint instead of a mismatched Bootstrap one.
+  &__referral {
+    display: none;
+
+    @include respond-to('xl') {
+      display: inline-flex;
+    }
+  }
+
+  &__nav-link {
+    padding: $spacing-sm $spacing-md;
+    font-family: $font-family-heading;
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: #fff;
+    text-decoration: none;
+    border-radius: $radius-md;
+    white-space: nowrap;
+    @include smooth-transition;
+
+    // Global small-desktop size-down — same $bp-narrow-desktop threshold
+    // as the buttons (&--lg in _button.scss), so the whole row shrinks
+    // together rather than just the pills.
+    @include respond-below('narrow-desktop') {
+      padding: $spacing-xs $spacing-sm;
+      font-size: $font-size-sm;
+    }
+
+    &:hover {
+      opacity: 0.75;
+    }
+
+    &--active {
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  &__actions {
+    @include flex(row, flex-end, center);
+    gap: $spacing-sm;
+    flex-shrink: 0;
+  }
+
+  &__theme-toggle {
+    // Figma: outer hit-area is 50x50px (0.735px border / 24px blur / a
+    // ~22px icon centered inside via ~14px padding) — was 44px, undersized.
+    @include flex-center;
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: $radius-full;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: 0.75px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    color: #fff;
+    cursor: pointer;
+    @include smooth-transition;
+    @include focus-ring();
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    &:hover {
+      background-color: var(--color-brand-accent);
+      border-color: var(--color-brand-accent);
+      color: #fff;
+      transform: rotate(15deg);
+    }
+  }
+
+  &__hamburger {
+    // Kept the same 50px hit-area as &__theme-toggle beside it.
+    @include flex-center;
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    cursor: pointer;
+    border-radius: $radius-full;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    @include smooth-transition;
+
+    @include respond-to('xl') {
+      display: none;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  }
+}

@@ -1,0 +1,85 @@
+// ============================================================
+// global.scss — Single entry point for all styles
+// IMPORTANT: @use rules MUST come before all @import rules in SCSS
+// ============================================================
+
+// ── Design System (Partials) — must be @use first ────────────
+@use 'partials/variables' as *;
+@use 'partials/mixins' as mix;
+@use 'partials/theme';
+@use 'partials/reset';
+@use 'partials/typography';
+
+// ── Component Partials ───────────────────────────────────────
+@use 'partials/button';
+@use 'partials/hover-slide';
+@use 'partials/header';
+@use 'partials/mobile-menu';
+@use 'partials/hero';
+@use 'partials/how-it-works';
+@use 'partials/footer';
+@use 'partials/slider';
+@use 'partials/forms';
+
+// ── Layout Utilities ─────────────────────────────────────────
+
+// The header is fixed. Pages that don't open with the transparent-over-hero
+// treatment need top padding so content doesn't sit under it; the homepage's
+// .hero handles its own spacing so it's excluded here.
+main {
+  &:not(:has(.hero)) {
+    padding-top: calc(#{$header-height} + #{$spacing-lg});
+
+    @include mix.respond-to('lg') {
+      padding-top: calc(#{$header-height-lg} + #{$spacing-lg});
+    }
+  }
+}
+
+.container-custom {
+  width: 100%;
+  max-width: $container-max-width;
+  margin: 0 auto;
+  padding: 0 $spacing-lg;
+
+  @include mix.respond-to('xl') {
+    padding: 0 $spacing-2xl;
+  }
+}
+
+.section {
+  padding: $spacing-4xl 0;
+
+  @include mix.respond-below('md') {
+    padding: $spacing-3xl 0;
+  }
+}
+
+.section-sm {
+  padding: $spacing-3xl 0;
+}
+
+// ── Card Utility ─────────────────────────────────────────────
+.card-custom {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: $radius-xl;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow $transition-base, border-color $transition-base;
+
+  &:hover {
+    box-shadow: $shadow-lg;
+    border-color: var(--color-border-strong);
+  }
+}
+
+// ── Divider ──────────────────────────────────────────────────
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-divider);
+  margin: $spacing-xl 0;
+}
+
+// No visible scrollbar anywhere in this project — see the hidden-scrollbar
+// rule on html/body in _reset.scss. (This used to apply a visible themed
+// scrollbar here, which was overriding that and was the actual bug.)

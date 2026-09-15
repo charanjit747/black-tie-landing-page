@@ -1,0 +1,44 @@
+// ============================================================
+// _typography.scss — Global Typography Styles
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ── Headings ─────────────────────────────────────────────────
+h1 { font-size: clamp($font-size-2xl, 5vw, $font-size-4xl); }
+h2 { font-size: clamp($font-size-xl, 4vw, $font-size-3xl); }
+h3 { font-size: clamp($font-size-lg, 3vw, $font-size-2xl); }
+h4 { font-size: clamp($font-size-md, 2.5vw, $font-size-xl); }
+h5 { font-size: $font-size-lg; }
+h6 { font-size: $font-size-base; }
+
+// ── Utility Classes ──────────────────────────────────────────
+.text-xs    { font-size: $font-size-xs !important; }
+.text-sm    { font-size: $font-size-sm !important; }
+.text-base  { font-size: $font-size-base !important; }
+.text-md    { font-size: $font-size-md !important; }
+.text-lg    { font-size: $font-size-lg !important; }
+.text-xl    { font-size: $font-size-xl !important; }
+.text-2xl   { font-size: $font-size-2xl !important; }
+.text-3xl   { font-size: $font-size-3xl !important; }
+
+.fw-light    { font-weight: $font-weight-light !important; }
+.fw-regular  { font-weight: $font-weight-regular !important; }
+.fw-medium   { font-weight: $font-weight-medium !important; }
+.fw-semibold { font-weight: $font-weight-semibold !important; }
+.fw-bold     { font-weight: $font-weight-bold !important; }
+.fw-black    { font-weight: $font-weight-black !important; }
+
+.text-primary-color   { color: var(--color-text-primary) !important; }
+.text-secondary-color { color: var(--color-text-secondary) !important; }
+.text-muted-color     { color: var(--color-text-muted) !important; }
+.text-accent          { color: var(--color-brand-accent) !important; }
+
+.text-truncate-1 { @include text-truncate(1); }
+.text-truncate-2 { @include text-truncate(2); }
+.text-truncate-3 { @include text-truncate(3); }
+
+.gradient-text {
+  @include gradient-text(var(--color-brand-primary), var(--color-brand-accent));
+}

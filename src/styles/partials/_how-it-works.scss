@@ -1,0 +1,309 @@
+// ============================================================
+// _how-it-works.scss — "How It Works? For Investors" Section
+//
+// Fully theme-reactive (unlike the Hero) — bg/text/border all read from
+// the shared CSS variables (see _theme.scss), confirmed against both
+// Home-Light and Home-Dark in Figma: white bg/near-black text/#dfdfdf
+// borders in light, #0c0c0c-ish bg/near-white text/#313131 borders in
+// dark — i.e. exactly --color-bg-primary / --color-text-primary /
+// --color-border already used everywhere else in the project.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.how-it-works {
+  background-color: var(--color-bg-primary);
+  padding: $spacing-4xl 0;
+
+  @include respond-below('md') {
+    padding: $spacing-3xl 0;
+  }
+
+  @include respond-below('xs') {
+    padding: $spacing-2xl 0;
+  }
+}
+
+// ── Header: tag / heading / subtitle ────────────────────────
+.how-it-works__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2rem;
+  max-width: 90rem;
+  margin: 0 auto;
+  padding-bottom: $spacing-3xl;
+
+  @include respond-below('md') {
+    padding-bottom: $spacing-2xl;
+  }
+
+  @include respond-below('xs') {
+    gap: 1.2rem;
+    padding-bottom: $spacing-xl;
+  }
+}
+
+.how-it-works__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-semibold;
+  font-size: 1.6rem; // 16px (1rem = 10px)
+  letter-spacing: -0.08rem; // -0.8px
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.how-it-works__heading {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  // Figma: 64px — clamped down for narrower screens like every other
+  // display heading in this project.
+  font-size: clamp(3.2rem, 5vw, 6.4rem);
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.how-it-works__heading-muted {
+  color: var(--color-text-primary);
+  // Figma: 60% in Home-Light, 40% in Home-Dark — not a flat rgba (that
+  // would only be correct for one theme), an actual opacity difference
+  // between themes on top of the same --color-text-primary token.
+  opacity: 0.6;
+
+  [data-theme='dark'] & {
+    opacity: 0.4;
+  }
+}
+
+.how-it-works__subtitle {
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: var(--color-text-secondary);
+  max-width: 76rem;
+  margin: 0 auto;
+
+  @include respond-below('xs') {
+    font-size: $font-size-sm;
+  }
+}
+
+// ── Step list ────────────────────────────────────────────────
+// `position: relative` — the anchor the hover stripe's `top`/`height`
+// (see .how-it-works__hover-stripe below) are measured against.
+.how-it-works__list {
+  position: relative;
+  width: 100%;
+}
+
+// One shared highlight bar, absolutely positioned behind every row —
+// GSAP (createHowItWorksHoverStripe) glides it to whichever row is
+// hovered instead of each row flipping its own background on/off, so it
+// reads as one physical strip sliding up/down rather than independent
+// per-row flashes. Sits behind the rows (z-index 0 vs. their 1).
+.how-it-works__hover-stripe {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  top: 0;
+  height: 0;
+  background-color: var(--color-bg-hover);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+
+  @include respond-below('md') {
+    display: none; // the hover-only interaction doesn't apply on touch
+  }
+}
+
+.how-it-works__row {
+  position: relative; // stacks above .how-it-works__hover-stripe
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-xl;
+  padding: 3rem 2rem;
+  // Reserves enough room for the title AND its hidden description at its
+  // tallest (a 2-line wrap on the longest copy) so revealing it on hover
+  // never actually needs to grow this row — that growth was what shook
+  // every row below it. The description still animates height: 0 → auto
+  // in normal flow (see .how-it-works__row-desc) so this row's own flex
+  // centering re-centers the title+desc block as it appears; it just
+  // never needs the row itself to get any taller than this reserved amount.
+  min-height: 19rem;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+
+  &:first-child {
+    border-top: 1px solid var(--color-border);
+  }
+
+  @include respond-below('md') {
+    padding: 2.4rem 1.6rem;
+    min-height: 15rem;
+  }
+
+  @include respond-below('xs') {
+    padding: 2rem 1.2rem;
+    gap: $spacing-md;
+    min-height: 12.5rem;
+  }
+}
+
+.how-it-works__row-text {
+  display: flex;
+  align-items: center;
+  gap: 10rem; // Figma's 100px gap between [index] and the title
+  min-width: 0;
+  opacity: 1;
+  will-change: opacity;
+
+  @include respond-below('lg') {
+    gap: $spacing-xl;
+  }
+
+  @include respond-below('sm') {
+    gap: $spacing-lg;
+  }
+
+  @include respond-below('xs') {
+    gap: $spacing-md;
+  }
+
+  // The resting "dimmed until hovered" look only makes sense where hover
+  // actually exists — on touch it would just leave the text permanently
+  // faded with no way to ever brighten it.
+  @media (hover: hover) and (pointer: fine) {
+    opacity: 0.3;
+    transition: opacity 0.35s ease;
+  }
+}
+
+.how-it-works__row-index {
+  flex-shrink: 0;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-lg; // 20px
+  color: var(--color-text-primary);
+  white-space: nowrap;
+
+  @include respond-below('xs') {
+    font-size: $font-size-base;
+  }
+}
+
+.how-it-works__row-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; // Figma: 20px between title and description
+  min-width: 0;
+}
+
+.how-it-works__row-title {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-regular;
+  // Figma: 50px — clamped for smaller screens, same pattern as the hero
+  // headline. Lower bound goes further down than the original clamp so
+  // it still shrinks cleanly at 320px instead of bottoming out too big.
+  font-size: clamp(1.8rem, 5.5vw, 5rem);
+  line-height: 1.15;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.how-it-works__row-desc {
+  // Back in normal flow (not absolutely positioned) — hidden at rest via
+  // height: 0, revealed on hover by tweening to 'auto' (see
+  // createHowItWorksInteraction in utils/gsapAnimations.ts). Growing
+  // in-flow is what lets `.how-it-works__row`'s own flex centering
+  // re-center the whole title+desc block as it appears — that's the
+  // "content re-centers on hover" look. The row itself never actually
+  // changes height because of its own min-height (see .how-it-works__row
+  // above), which is what stops that growth from shoving rows below it.
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  font-family: $font-family-base;
+  // Figma: 16px medium, 19.2px line-height (1.2 ratio), #4a4a4a light /
+  // #afafaf dark — closest existing token to that muted gray in both
+  // themes is --color-text-muted.
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.how-it-works__row-thumb {
+  position: relative;
+  flex-shrink: 0;
+  width: 13rem; // 130px
+  height: 8.5rem; // 85px
+  // No radius — the thumbnail is a plain rectangular crop, per Figma.
+  border-radius: 0;
+  overflow: hidden;
+  will-change: transform, opacity;
+
+  @include respond-below('md') {
+    display: none; // the cursor-follow preview is a desktop-only embellishment
+  }
+}
+
+.how-it-works__row-thumb-img {
+  object-fit: cover;
+}
+
+// ── Cursor-follow big preview ────────────────────────────────
+// One shared element for every row — GSAP (see utils/gsapAnimations.ts)
+// drives its position/opacity/scale/rotation; only the <img> inside
+// swaps per row. `position: absolute` against .how-it-works__list (not
+// `fixed` against the viewport) is deliberate: it's what makes the
+// preview scroll away naturally with the rest of the list content —
+// no manual scroll-tracking/dismiss logic needed at all, and it can
+// never end up floating over an unrelated section.
+.how-it-works__preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  // Figma's per-row popout varies slightly (~486–496px × ~317–324px
+  // once unrotated); 49rem × 32rem is the representative average for
+  // this one shared element.
+  width: 49rem; // ~490px
+  height: 32rem; // ~320px
+  // No radius here either — matches the thumbnail, a plain rectangular
+  // crop, just scaled up (Figma gives it a 7.6° tilt instead — see the
+  // `rotation` set alongside x/y in createHowItWorksInteraction).
+  border-radius: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: $z-tooltip;
+  opacity: 0; // matches the GSAP-set initial state as a no-JS fallback
+  box-shadow: var(--shadow-dropdown);
+  // Figma: no border in Home-Light, a ~3.6px --color-border frame in
+  // Home-Dark (the image needs a visible edge against the dark bg).
+  border: 0 solid var(--color-border);
+
+  [data-theme='dark'] & {
+    border-width: 0.36rem;
+  }
+
+  @include respond-below('md') {
+    display: none;
+  }
+}
+
+.how-it-works__preview-img {
+  object-fit: cover;
+}

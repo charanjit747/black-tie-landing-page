@@ -1,0 +1,150 @@
+// ============================================================
+// _slider.scss — React Slick Slider Overrides & Custom Styles
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.common-slider {
+  position: relative;
+
+  &__wrapper {
+    overflow: hidden;
+  }
+
+  // ── Custom Arrows ─────────────────────────────────────────
+  .slick-arrow {
+    @include flex-center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: $z-raised;
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-full;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    @include smooth-transition;
+    box-shadow: $shadow-md;
+
+    &::before {
+      display: none; // Remove slick's default arrows
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+    }
+
+    &:hover {
+      background-color: var(--color-brand-accent);
+      color: $color-white;
+      border-color: var(--color-brand-accent);
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    &.slick-prev {
+      left: -22px;
+    }
+
+    &.slick-next {
+      right: -22px;
+    }
+
+    &.slick-disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+  }
+
+  // ── Dots ─────────────────────────────────────────────────
+  .slick-dots {
+    @include flex(row, center, center);
+    gap: $spacing-xs;
+    margin-top: $spacing-lg;
+
+    li {
+      width: auto;
+      height: auto;
+      margin: 0;
+
+      button {
+        width: 8px;
+        height: 8px;
+        border-radius: $radius-full;
+        background-color: var(--color-border-strong);
+        padding: 0;
+        @include smooth-transition;
+
+        &::before {
+          display: none;
+        }
+      }
+
+      &.slick-active button {
+        width: 24px;
+        background-color: var(--color-brand-accent);
+        border-radius: $radius-full;
+      }
+    }
+  }
+
+  // ── Slide ─────────────────────────────────────────────────
+  .slick-slide {
+    outline: none;
+    padding: $spacing-xs;
+  }
+
+  .slick-list {
+    overflow: hidden;
+    padding-bottom: $spacing-sm;
+  }
+
+  .slick-track {
+    @include flex(row, flex-start, stretch);
+  }
+}
+
+// ── Slide Card (default usage) ─────────────────────────────
+.slide-card {
+  background-color: var(--color-bg-card);
+  border-radius: $radius-xl;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  @include smooth-transition;
+  height: 100%;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-xl;
+    border-color: var(--color-brand-accent);
+  }
+
+  &__image {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+  }
+
+  &__body {
+    padding: $spacing-lg;
+  }
+
+  &__title {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: var(--color-text-primary);
+    margin-bottom: $spacing-sm;
+    @include text-truncate(2);
+  }
+
+  &__text {
+    font-size: $font-size-sm;
+    color: var(--color-text-muted);
+    @include text-truncate(3);
+  }
+}
