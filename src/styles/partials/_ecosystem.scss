@@ -1,0 +1,177 @@
+// ============================================================
+// _ecosystem.scss — Black Tie Real-World Asset Infrastructure
+// Ecosystem (vertical autoplay slider, 4 slides)
+//
+// Each slide is one complete, pre-flattened image exported straight
+// out of Figma (see Ecosystem.tsx) — theme-invariant by nature, since
+// it's a single raster image, not live content.
+//
+// Each slide is a fixed-height box (not sized off the image), so the
+// slick slider's own height is always known from CSS alone — a
+// slow-loading or failed image can never leave the slider stuck with
+// no height or a collapsed slide. The shimmer background sits
+// permanently underneath the image (a real animated gradient, not a
+// one-time loading state to track in JS) so it's simply always the
+// fallback whenever the image on top hasn't painted yet.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.ecosystem {
+  position: relative; // anchors .section-bg-lines — see _background-lines.scss
+  padding: $spacing-3xl 0;
+
+  @include respond-below('md') {
+    padding: $spacing-2xl 0;
+  }
+}
+
+.ecosystem__wrap {
+  padding: 0 2rem;
+
+  @include respond-below('sm') {
+    padding: 0 $spacing-md;
+  }
+}
+
+.ecosystem__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $spacing-xl;
+  padding-bottom: 3rem;
+
+  @include respond-below('lg') {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-md;
+  }
+}
+
+.ecosystem__heading {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 6.2rem; // 62.2px
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  margin: 0;
+  max-width: 84.6rem;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 4.4rem;
+  }
+
+  @include respond-below('lg') {
+    font-size: 3.2rem;
+    max-width: 100%;
+  }
+
+  @include respond-below('md') {
+    font-size: 2.4rem;
+  }
+}
+
+.ecosystem__heading-muted {
+  color: var(--color-text-primary);
+  opacity: 0.5;
+
+  [data-theme='dark'] & {
+    opacity: 0.4;
+  }
+}
+
+// Genuinely theme-reactive (unlike What We Do's CTA a few sections up)
+// — Figma has this flip from a dark pill/white text in light theme to
+// a light pill/dark text in dark theme. `attachedIcon` mode (see
+// _button.scss's `&--attached`) renders the label and icon-cap as
+// separate children carrying their own background, so the override
+// has to target those directly rather than the outer `--primary`
+// class, which has no visible effect in this mode.
+.ecosystem__cta.btn-common--attached {
+  flex-shrink: 0;
+
+  .btn-common__label,
+  .btn-common__icon-cap {
+    background-color: #1d1d1d;
+    color: #fefefe;
+  }
+
+  [data-theme='dark'] & {
+    .btn-common__label,
+    .btn-common__icon-cap {
+      background-color: #efefef;
+      color: #0c0c0c;
+    }
+  }
+}
+
+.ecosystem__slider {
+  border-radius: 4rem;
+  overflow: hidden;
+
+  @include respond-below('md') {
+    border-radius: 2.4rem;
+  }
+
+  // react-slick's vertical mode measures each slide's height in JS at
+  // mount and caches it as an inline `height` style on .slick-list/
+  // .slick-track — that cache doesn't reliably keep up with a
+  // responsive aspect-ratio-driven height across a live viewport
+  // resize, so the wrapper can end up shorter than the current slide,
+  // clipping its bottom via .slick-list's overflow: hidden (exactly
+  // the crop reported). `!important` is the only way to override an
+  // inline style, so it's used deliberately here to hand height back
+  // to CSS: .slick-list gets the same aspect-ratio as one slide (it's
+  // the single-slide viewport window and needs an explicit height,
+  // just a responsive one instead of a stale cached px value); the
+  // track/slide/slide-inner wrappers get `auto` so they simply follow
+  // their content's real (aspect-ratio-driven) height instead of a
+  // cached number.
+  .slick-list {
+    height: auto !important;
+    aspect-ratio: 1873 / 840 !important;
+  }
+
+  .slick-track,
+  .slick-slide,
+  .slick-slide > div {
+    height: auto !important;
+  }
+}
+
+.ecosystem__slide {
+  // aspect-ratio (matching the exported slide images' own 1873×840
+  // canvas exactly), not a fixed height per breakpoint — a height that
+  // doesn't match the image's real ratio forces object-fit: cover to
+  // crop it at every width where the two don't line up. Every slide
+  // shares this exact ratio since they were all exported from the same
+  // fixed Figma canvas size.
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1873 / 840;
+  background-color: #000;
+}
+
+// Permanent shimmer base — see file header. Always present under the
+// image; only ever hidden by the (opaque) photo painting on top of it.
+.ecosystem__slide-media {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, #111 40%, #1c1c1c 50%, #111 60%);
+  background-size: 200% 100%;
+  animation: ecosystem-shimmer 1.8s ease-in-out infinite;
+
+  img {
+    object-fit: cover;
+  }
+}
+
+@keyframes ecosystem-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

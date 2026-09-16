@@ -26,9 +26,9 @@ $header-inset-top: 3.2rem; // reduced from Figma's 49px — 32px, a bit tighter
 // section that also uses `.container`. `body .container.site-header__container`
 // keeps 3 levels of specificity (vs. the shared rule's 2) so this wins
 // unconditionally, immune to Turbopack's CSS chunk load order.
-body .container.site-header__container {
-  max-width: 177rem; // 1770px (1rem = 10px)
-}
+// body .container.site-header__container {
+//   max-width: 177rem; // 1770px (1rem = 10px)
+// }
 
 // Global small-desktop size-down — see $bp-narrow-desktop. ~25% tighter
 // than Figma's 32px.

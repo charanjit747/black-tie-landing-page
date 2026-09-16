@@ -169,11 +169,57 @@ export const ExternalLinkIcon: React.FC<IconProps> = ({ size = 24, ...props }) =
   </svg>
 );
 
-/** Small diagonal "up-right" arrow — used next to ticker/pill labels (e.g. hero marquee). */
-export const ArrowUpRightIcon: React.FC<IconProps> = ({ size = 24, ...props }) => (
-  <svg {...defaultProps(size)} {...props}>
-    <line x1="7" y1="17" x2="17" y2="7" />
-    <polyline points="7 7 17 7 17 17" />
+/**
+ * ArrowUpRightIcon — exact path exported from Figma (node 81:575), the
+ * small "up-right" arrow used next to every tag/pill label sitewide
+ * (FAQs, Investor, Asset Manager Section, Our Partners, Contact Us,
+ * etc.). Filled, not stroked, so it uses `currentColor` directly
+ * rather than the shared stroke-icon defaults, with its own 11x11
+ * viewBox instead of the generic 24x24 grid.
+ *
+ * NOT used by the footer's social pills — those have their own
+ * distinct glyph, see SocialLinkArrowIcon below.
+ */
+export const ArrowUpRightIcon: React.FC<IconProps> = ({ size = 11, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 11 11"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    {...props}
+  >
+    <path
+      d="M0.21967 9.40717C-0.0732233 9.70006 -0.0732233 10.1749 0.21967 10.4678C0.512563 10.7607 0.987437 10.7607 1.28033 10.4678L0.21967 9.40717ZM10.6875 0.75C10.6875 0.335786 10.3517 2.73954e-07 9.9375 4.21468e-07L3.1875 0C2.77329 0 2.4375 0.335786 2.4375 0.75C2.4375 1.16421 2.77329 1.5 3.1875 1.5H9.1875V7.5C9.1875 7.91421 9.52329 8.25 9.9375 8.25C10.3517 8.25 10.6875 7.91421 10.6875 7.5V0.75ZM0.75 9.9375L1.28033 10.4678L10.4678 1.28033L9.9375 0.75L9.40717 0.21967L0.21967 9.40717L0.75 9.9375Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+/**
+ * SocialLinkArrowIcon — exact path exported from Figma (node
+ * 132:1779), the small arrow inside the footer's Twitter/Facebook/
+ * Instagram/LinkedIn/YouTube pills. A genuinely different glyph from
+ * ArrowUpRightIcon above (confirmed directly from Figma rather than
+ * assumed) — narrower and more vertical, not the same 11x11 diagonal
+ * arrow used everywhere else. Filled, uses `currentColor`, own 9x10
+ * viewBox.
+ */
+export const SocialLinkArrowIcon: React.FC<IconProps> = ({ size = 9, ...props }) => (
+  <svg
+    width={size}
+    height={typeof size === 'number' ? (size * 10) / 9 : size}
+    viewBox="0 0 9 10"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    {...props}
+  >
+    <path
+      d="M5.62494 9.99994L0.562517 10L0.5625 8.75003L4.49994 8.74996L4.5 2.39273L2.27828 4.86124L1.48278 3.97739L5.0625 0L8.64225 3.97739L7.84676 4.86124L5.625 2.3927L5.62494 9.99994Z"
+      fill="currentColor"
+    />
   </svg>
 );
 

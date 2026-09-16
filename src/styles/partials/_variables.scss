@@ -7,6 +7,9 @@
 // next/font/google in layout.tsx and exposed as --font-dm-sans.
 $font-family-base: var(--font-dm-sans), 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 $font-family-heading: $font-family-base;
+// Krona One — used only for the footer's "BLACK TIE / ASSET HUB"
+// wordmark (see layout.tsx); every other heading/body use is DM Sans.
+$font-family-krona: var(--font-krona-one), 'Krona One', $font-family-base;
 
 // html{} is font-size: 62.5% (1rem = 10px sitewide) — these are each
 // value's real px target ÷ 10, not ÷ 16.

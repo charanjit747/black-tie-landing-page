@@ -1,0 +1,213 @@
+// ============================================================
+// _what-we-do.scss — Bringing Real-World Assets On-Chain
+//
+// Two columns: text content (tag/heading/3 features/CTA) on the left,
+// a looping globe video on the right. The video panel and the
+// "Get a free quote" CTA are both theme-invariant (identical hardcoded
+// colors in Figma's Home-Light and Home-Dark) — everything else
+// (tag/heading/feature text/icons) follows the normal light/dark
+// tokens like the rest of the page.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.what-we-do {
+  position: relative; // anchors .section-bg-lines — see _background-lines.scss
+  padding: 12rem 10rem;
+
+  @include respond-below('narrow-desktop') {
+    padding: 8rem 6rem;
+  }
+
+  // Below this the row switches to a single stacked column (see
+  // .what-we-do__row) — matches that same breakpoint rather than 'lg',
+  // which left the two columns fighting for space at anything between
+  // 992-1199px (content squeezed to a sliver, heading wrapping
+  // word-by-word) before finally collapsing.
+  @include respond-below('xl') {
+    padding: $spacing-2xl $spacing-xl;
+  }
+
+  @include respond-below('md') {
+    padding: $spacing-xl $spacing-md;
+  }
+}
+
+.what-we-do__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6rem;
+
+  @include respond-below('xl') {
+    flex-direction: column;
+    align-items: stretch;
+    gap: $spacing-2xl;
+  }
+}
+
+.what-we-do__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4rem;
+  max-width: 66.4rem;
+  min-width: 0; // lets this shrink properly instead of forcing the row to overflow
+
+  @include respond-below('narrow-desktop') {
+    gap: 3rem;
+  }
+
+  @include respond-below('xl') {
+    max-width: 100%;
+  }
+}
+
+.what-we-do__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.what-we-do__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-semibold;
+  font-size: 1.6rem;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+.what-we-do__heading {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 6.4rem; // 64px
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  margin: 0;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 4.6rem;
+  }
+
+  @include respond-below('xl') {
+    font-size: 3.6rem;
+  }
+
+  @include respond-below('xs') {
+    font-size: 2.8rem;
+  }
+}
+
+.what-we-do__heading-muted {
+  color: var(--color-text-primary);
+  opacity: 0.5;
+
+  [data-theme='dark'] & {
+    opacity: 0.4;
+  }
+}
+
+.what-we-do__features {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  width: 100%;
+}
+
+.what-we-do__feature {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.what-we-do__feature-icon {
+  flex-shrink: 0;
+  width: 8rem;
+  height: 8rem;
+  color: var(--color-text-primary);
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  @include respond-below('narrow-desktop') {
+    width: 6rem;
+    height: 6rem;
+  }
+
+  @include respond-below('md') {
+    width: 5rem;
+    height: 5rem;
+  }
+}
+
+.what-we-do__feature-text {
+  font-family: $font-family-base;
+  font-weight: $font-weight-medium;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  // Figma one-off — doesn't match --color-text-secondary/-muted closely
+  // enough in either theme to reuse those tokens.
+  color: #4a4a4a;
+
+  [data-theme='dark'] & {
+    color: #afafaf;
+  }
+
+  max-width: 56.1rem;
+  margin: 0;
+}
+
+// Theme-invariant — see file header. `attachedIcon` mode (see
+// _button.scss's `&--attached`) renders the label and icon-cap as
+// separate children that carry their OWN background via
+// --color-btn-secondary-* (always theme-reactive: white bg/black text
+// in light, black bg/white text in dark) — the outer `--primary` class
+// has no visible effect at all in this mode, so overriding it (as a
+// first attempt did) changed nothing. The actual visible colors have
+// to be overridden on those child elements instead.
+.what-we-do__cta.btn-common--attached {
+  .btn-common__label,
+  .btn-common__icon-cap {
+    background-color: #1d1d1d;
+    color: #fefefe;
+  }
+
+  &:hover .btn-common__label,
+  &:hover .btn-common__icon-cap {
+    background-color: #000;
+    color: #fefefe;
+  }
+}
+
+// The globe render — theme-invariant (identical Figma export in both
+// themes), so this is a plain background-image, not a token.
+.what-we-do__visual {
+  flex-shrink: 0;
+  width: 86.8rem;
+  aspect-ratio: 868 / 813;
+  border-radius: 4rem;
+  object-fit: cover;
+
+  @include respond-below('narrow-desktop') {
+    width: 60rem;
+  }
+
+  @include respond-below('xl') {
+    width: 100%;
+    max-width: 60rem;
+  }
+}

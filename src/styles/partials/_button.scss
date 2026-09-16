@@ -13,8 +13,14 @@
   font-family: $font-family-base;
   font-weight: $font-weight-semibold;
   font-size: $font-size-sm;
-  line-height: 1; // buttons shouldn't inherit body copy's 1.5 line-height —
-                  // that was inflating every pill well past its padding
+  // Buttons shouldn't inherit body copy's 1.5 line-height (that was
+  // inflating every pill well past its padding) — but exactly 1 is
+  // *tighter* than the font's own natural line box, and combined with
+  // `overflow: hidden` below was clipping descenders (e.g. "quote",
+  // "your") on any label this rule's line-height actually governs.
+  // `normal` is still far tighter than 1.5 while leaving room for the
+  // font's real ascent/descent.
+  line-height: normal;
   letter-spacing: 0.025em;
   border-radius: $radius-md;
   border: 2px solid transparent;
@@ -90,20 +96,6 @@
     opacity: 1;
   }
 
-  // HoverSlideText's `.hover-slide`/`.hover-slide__row` (see
-  // _hover-slide.scss) hardcode their own 1.2em row height for its
-  // general nav-link/ticker use — inside a button that ignores it,
-  // inflating the pill's total height past whatever this file's own
-  // line-height for the size says. Default here matches the base rule's
-  // own `line-height: 1` above (1em); size blocks below override this
-  // with their own explicit value where they set a different line-height
-  // (e.g. --lg) — same selector specificity, so source order decides,
-  // and those come later.
-  .hover-slide,
-  .hover-slide__row {
-    height: 1em;
-  }
-
   // ── Sizes ────────────────────────────────────────────────
   &--sm {
     padding: 0.8rem 2rem; // 8px / 20px (1rem = 10px)
@@ -118,47 +110,33 @@
   }
 
   &--lg {
-    // Matches Figma's pill spec exactly (20px / medium) — this is the
-    // default size, used for every header/hero pill (Referral, Login,
-    // Get Started), and it stays this size at $bp-narrow-desktop and up.
-    // Figma's text sits at leading-[16px] (tighter than its own 20px font
-    // size, not the base rule's line-height: 1) — without this override
-    // the pill was rendering ~4px taller than Figma on each of these
-    // (48px content-box tall in Figma vs. 52px here), reading as "bigger".
-    padding: 1.6rem 2.5rem; // 16px / 25px (1rem = 10px)
-    font-size: 2rem;        // 20px (1rem = 10px)
-    line-height: 1.6rem;    // 16px, matches Figma's leading-[16px]
+    // Matches Figma's pill spec exactly (20px font / 48px content-box) —
+    // this is the default size, used for every header/hero pill
+    // (Referral, Login, Get Started), and it stays this size at
+    // $bp-narrow-desktop and up.
+    //
+    // Height is set directly rather than derived from padding + a tight
+    // line-height (Figma's own leading-[16px] is *shorter* than its
+    // 20px font, which Figma's editor doesn't hard-clip against but this
+    // button's own `overflow: hidden` above does — any label with a
+    // descender, e.g. "quote" or "your", was getting its tail cut off).
+    // A fixed height plus the base rule's `align-items: center` centers
+    // the label inside it regardless of the font's natural line box, so
+    // there's always room for ascenders/descenders with no clipping.
+    height: 4.8rem; // 48px
+    padding: 0 2.5rem; // 25px horizontal only — height above does the rest
+    font-size: 2rem; // 20px (1rem = 10px)
+    line-height: normal;
     font-weight: $font-weight-medium;
     border-radius: 9999px;
-
-    // HoverSlideText's `.hover-slide`/`.hover-slide__row` (see
-    // _hover-slide.scss) hardcode their own 1.2em row height for general
-    // nav-link/ticker use — inside this button that ignored the
-    // line-height set just above, so the pill kept rendering ~24px tall
-    // per row instead of this size's actual 16px, 8px taller overall than
-    // Figma. Plain rem (not `1lh`, unsupported in some renderers) pins it
-    // to the same value as this size's own line-height. Declared BEFORE
-    // the narrow-desktop media query below (same selector specificity —
-    // whichever comes later in the stylesheet wins at that breakpoint).
-    .hover-slide,
-    .hover-slide__row {
-      height: 1.6rem;
-    }
 
     // Global size-down for small desktops — see $bp-narrow-desktop. Same
     // button, same API, just more compact so it still fits comfortably
     // once the viewport gets tighter than a full desktop monitor.
     @include respond-below('narrow-desktop') {
-      padding: 1.2rem 2rem;  // 12px / 20px (1rem = 10px)
-      font-size: 1.7rem;     // 17px (1rem = 10px)
-      line-height: 1.36rem;  // keeps the same 0.8 line-height ratio
-
-      // HoverSlideText's own row height must shrink in step — declared
-      // after the unconditional 1.6rem above so it wins at this breakpoint.
-      .hover-slide,
-      .hover-slide__row {
-        height: 1.36rem;
-      }
+      height: 4.4rem; // 44px — same shrink used by &--attached below
+      padding: 0 2rem; // 20px (1rem = 10px)
+      font-size: 1.7rem; // 17px (1rem = 10px)
     }
   }
 

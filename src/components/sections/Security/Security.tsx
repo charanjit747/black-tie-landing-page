@@ -37,7 +37,7 @@ const CARDS = [
     cta: 'View Detail',
   },
   {
-    lockup: '/assets/security/docusign-lockup.png',
+    lockup: '/assets/security/docusign-lockup-v3.png',
     lockupWidth: 820,
     lockupHeight: 99,
     title: 'DocuSign Integrated',

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { DM_Sans } from 'next/font/google';
+import { DM_Sans, Krona_One } from 'next/font/google';
 import { ReduxProvider } from '@/providers/ReduxProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { LenisProvider } from '@/providers/LenisProvider';
@@ -21,6 +21,16 @@ const dmSans = DM_Sans({
   variable: '--font-dm-sans',
   display: 'swap',
   weight: ['400', '500', '600', '700', '900'], // 900 needed for the mobile menu's extra-bold nav labels
+});
+
+// Only used for the "BLACK TIE / ASSET HUB" wordmark in the footer — the
+// header uses a flattened logo image, but the footer's is live text per
+// Figma, so this is the one spot in the site that needs it.
+const kronaOne = Krona_One({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-krona-one',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -50,7 +60,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="light"
-      className={dmSans.variable}
+      className={`${dmSans.variable} ${kronaOne.variable}`}
       suppressHydrationWarning
     >
       <head>

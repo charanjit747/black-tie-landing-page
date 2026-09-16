@@ -12,11 +12,7 @@
 @use 'mixins' as *;
 
 .security {
-  padding: $spacing-3xl 0;
-
-  @include respond-below('md') {
-    padding: $spacing-2xl 0;
-  }
+  padding: 0;
 }
 
 .security__card {
@@ -44,23 +40,21 @@
 }
 
 // The ambient glow — a pre-blurred export straight out of Figma (not a
-// live CSS filter: blur), confirmed pixel-identical between light and
-// dark themes, so one asset covers both.
+// live CSS filter: blur). It now spans the whole card edge-to-edge
+// (previously a smaller off-center rectangle anchored to the right),
+// so it's a plain full-cover background rather than a separately
+// sized/positioned box. Light and dark now render slightly different
+// source art (previously identical), so each theme gets its own file.
 .security__glow {
   position: absolute;
-  top: 50%;
-  right: -10rem;
-  transform: translateY(-50%);
-  width: 132.5rem;
-  height: 82.2rem;
-  max-width: 100%;
-  background-image: url('/assets/security/glow.jpg');
+  inset: 0;
+  background-image: url('/assets/security/glow-light.jpg');
   background-size: cover;
   background-position: center;
   pointer-events: none;
 
-  @include respond-below('lg') {
-    opacity: 0.6;
+  [data-theme='dark'] & {
+    background-image: url('/assets/security/glow-dark.jpg');
   }
 }
 

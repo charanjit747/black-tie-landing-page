@@ -23,9 +23,19 @@
 @use 'partials/stats';
 @use 'partials/partners';
 @use 'partials/security';
+@use 'partials/what-we-do';
+@use 'partials/ecosystem';
+@use 'partials/faq';
 @use 'partials/footer';
 @use 'partials/slider';
 @use 'partials/forms';
+// Loaded after 'forms' deliberately — the shared pill-input styles
+// there use !important, which always beats a plain rule regardless of
+// specificity. This section's own field-color overrides need
+// !important too (see _contact-us.scss), and between two !important
+// rules of equal specificity, source order decides the winner.
+@use 'partials/join-community';
+@use 'partials/contact-us';
 
 // ── Layout Utilities ─────────────────────────────────────────
 

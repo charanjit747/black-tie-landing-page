@@ -1,0 +1,326 @@
+// ============================================================
+// _contact-us.scss — "Contact Us" form section (Figma's own label
+// for what sits in the "Join our community" slot in the page flow).
+//
+// The orbit/globe illustration is a ~30-layer masked SVG composition
+// in Figma; per the Ecosystem slider precedent a few sections up, it's
+// exported as one flattened image per theme (public/assets/contact-us/
+// globe-light.png, globe-dark.png) and swapped via background-image
+// rather than reconstructed live.
+//
+// Field/button colors are hardcoded to Figma's exact values rather
+// than the shared .form-input/.btn-common tokens (see _forms.scss and
+// _button.scss) — same reasoning as the What We Do / Ecosystem CTA
+// overrides above: those shared tokens are generic sitewide defaults
+// that happen to be close but not pixel-identical to this section's
+// design, and changing them would ripple into every other form/button
+// on the site.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.contact-us {
+  position: relative; // anchors .section-bg-lines — see _background-lines.scss
+  // Bottom is deliberately 0, not symmetric with the top: Contact Us's
+  // card frame in Figma ends at the exact same y as the Footer frame
+  // begins (no gap between the two nodes at all) — the full visible
+  // gap above the footer is entirely the footer's own pt-120px, so
+  // adding bottom padding here would double it up.
+  padding: $spacing-3xl 0 0;
+
+  @include respond-below('md') {
+    padding: $spacing-2xl 0 0;
+  }
+}
+
+.contact-us__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6rem;
+  padding: 12rem 8rem;
+  border-radius: 3rem;
+  background-color: #f2f2f2;
+
+  [data-theme='dark'] & {
+    background-color: #1d1d1d;
+  }
+
+  @include respond-below('narrow-desktop') {
+    padding: 8rem 5rem;
+  }
+
+  @include respond-below('lg') {
+    padding: $spacing-2xl $spacing-lg;
+    gap: $spacing-2xl;
+  }
+
+  @include respond-below('md') {
+    padding: $spacing-xl $spacing-md;
+    border-radius: 2rem;
+  }
+}
+
+.contact-us__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.contact-us__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-semibold;
+  font-size: 1.6rem;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+.contact-us__heading {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 6.4rem; // 64px
+  line-height: 1.17;
+  color: #1d1d1d;
+  margin: 0;
+  max-width: 172rem;
+
+  [data-theme='dark'] & {
+    color: #efefef;
+  }
+
+  @include respond-below('narrow-desktop') {
+    font-size: 4.6rem;
+  }
+
+  @include respond-below('lg') {
+    font-size: 3.2rem;
+  }
+
+  @include respond-below('md') {
+    font-size: 2.4rem;
+  }
+}
+
+.contact-us__heading-muted {
+  color: #777;
+
+  [data-theme='dark'] & {
+    color: rgba(239, 239, 239, 0.4);
+  }
+}
+
+.contact-us__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6rem;
+
+  @include respond-below('xl') {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.contact-us__globe {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 78.1rem;
+  aspect-ratio: 781 / 721;
+  background-image: url('/assets/contact-us/globe-light.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  [data-theme='dark'] & {
+    background-image: url('/assets/contact-us/globe-dark.png');
+  }
+
+  @include respond-below('xl') {
+    max-width: 44rem;
+    margin: 0 auto;
+  }
+
+  @include respond-below('md') {
+    max-width: 32rem;
+  }
+}
+
+.contact-us__form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5rem;
+  width: 100%;
+  max-width: 75.5rem;
+
+  @include respond-below('xl') {
+    max-width: 100%;
+  }
+}
+
+.contact-us__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  width: 100%;
+
+  // Figma's fields carry no visible label — only a placeholder inside
+  // a pill. Field spacing here (1.6rem) replaces .form-group's own gap
+  // between label/input/error, which isn't used in this layout.
+  .form-group {
+    gap: 0;
+  }
+}
+
+// ── Pill Inputs (exact Figma colors — see file header) ─────────
+// !important throughout: _forms.scss's shared %input-base (and its
+// .react-tel-input .form-control override) uses !important on these
+// same properties, which always wins over a plain rule no matter the
+// selector's specificity. Between two !important rules of equal
+// specificity, source order decides — see the load-order note next to
+// this partial's @use in global.scss.
+.contact-us__fields .form-input,
+.contact-us__fields .form-textarea,
+.contact-us__fields .react-tel-input .form-control {
+  height: 6rem !important;
+  padding: 0 2.5rem !important;
+  font-family: $font-family-base !important;
+  font-size: 1.8rem !important;
+  font-weight: $font-weight-regular !important;
+  color: #0c0c0c !important;
+  background-color: #fff !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  &::placeholder {
+    color: #585959 !important;
+    opacity: 1 !important;
+  }
+
+  &:focus {
+    border-color: transparent !important;
+    box-shadow: 0 0 0 2px rgba(29, 29, 29, 0.15) !important;
+  }
+
+  // Our own border/box-shadow above beats _forms.scss's own
+  // .form-input--error / .form-textarea--error rules on specificity
+  // (this selector carries an extra class), which was silently
+  // swallowing the red error state. These fields have no border in
+  // Figma's design at all, so the error is surfaced as a ring instead.
+  &.form-input--error,
+  &.form-textarea--error {
+    box-shadow: 0 0 0 2px var(--color-error) !important;
+  }
+
+  // Browser autofill (the phone field is the one field a browser will
+  // usually offer to autofill) paints its own background/text color
+  // over ours — in a dark color-scheme that shows up as a navy tint,
+  // which is exactly what broke the phone pill's consistency with the
+  // other fields. The 5000s transition delay is the standard trick to
+  // neutralize it without JS.
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: #0c0c0c !important;
+    -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  [data-theme='dark'] & {
+    color: #efefef !important;
+    background-color: #2b2b2b !important;
+
+    &::placeholder {
+      color: rgba(239, 239, 239, 0.4) !important;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(239, 239, 239, 0.15) !important;
+    }
+
+    &.form-input--error,
+    &.form-textarea--error {
+      box-shadow: 0 0 0 2px var(--color-error) !important;
+    }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-text-fill-color: #efefef !important;
+      -webkit-box-shadow: 0 0 0 1000px #2b2b2b inset !important;
+    }
+  }
+}
+
+.contact-us__fields .form-textarea {
+  height: 15rem !important;
+  padding: 2.4rem 2.5rem !important;
+  border-radius: 2.6rem !important;
+  resize: none;
+}
+
+.contact-us__fields .react-tel-input .form-control {
+  padding-left: 8.5rem !important;
+}
+
+// _forms.scss defines a `.react-tel-input--error` class on the phone
+// field's own container class list but never actually styles it —
+// FormikPhoneInput sets the class, nothing consumes it. Scoped here
+// rather than fixed globally, matching the "hardcode this section's
+// exact look" approach used throughout this partial.
+.contact-us__fields .react-tel-input--error .form-control {
+  box-shadow: 0 0 0 2px var(--color-error) !important;
+}
+
+.contact-us__fields .react-tel-input .flag-dropdown::after {
+  background-color: rgba(12, 12, 12, 0.2);
+
+  [data-theme='dark'] & {
+    background-color: rgba(239, 239, 239, 0.2);
+  }
+}
+
+.contact-us__fields .form-group__error {
+  color: var(--color-error);
+}
+
+// Theme-invariant flip (same pattern as .ecosystem__cta / .what-we-do__cta
+// above) — Figma's button is dark-on-light in light theme, light-on-dark
+// in dark theme, always the opposite of the section's own card background.
+.contact-us__submit.btn-common--primary {
+  height: 6.9rem;
+  padding: 0 5.1rem;
+  font-size: 2rem;
+  font-weight: $font-weight-semibold;
+  text-transform: capitalize;
+  background-color: #1d1d1d;
+  border-color: #1d1d1d;
+  color: #fefefe;
+
+  &:hover {
+    background-color: #000;
+    border-color: #000;
+    color: #fefefe;
+  }
+
+  [data-theme='dark'] & {
+    background-color: #efefef;
+    border-color: #efefef;
+    color: #0c0c0c;
+
+    &:hover {
+      background-color: #fff;
+      border-color: #fff;
+      color: #0c0c0c;
+    }
+  }
+}

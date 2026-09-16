@@ -1,0 +1,274 @@
+// ============================================================
+// _join-community.scss — "Join Our Community" newsletter signup
+// (single email field + submit), sitting right above Contact Us.
+//
+// Field/button colors are hardcoded to Figma's exact values rather
+// than the shared .form-input/.btn-common tokens — same reasoning as
+// Contact Us above: those are generic sitewide defaults, close but not
+// pixel-identical to this design. Their !important rules are why this
+// partial is @use'd after 'forms' in global.scss (see the note there).
+//
+// The email pill is genuinely asymmetric between themes — light has a
+// visible 1px border, dark has none at all (confirmed by reading both
+// Figma exports directly rather than assuming symmetry, same as the
+// Ecosystem CTA / FAQ heading elsewhere on this page).
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.join-community {
+  position: relative;
+  // 5.6rem, not a named spacing token: FAQ above and Contact Us below
+  // both pad their touching side with $spacing-3xl (64px), and Figma's
+  // actual content-to-content gap on both sides of this section is
+  // exactly 120px (measured from the frame coordinates directly, not
+  // assumed) — 120 - 64 = 56px is this section's own share of it.
+  padding: 5.6rem 0;
+
+  @include respond-below('lg') {
+    padding: $spacing-3xl 0;
+  }
+
+  @include respond-below('md') {
+    padding: $spacing-2xl 0;
+  }
+}
+
+.join-community__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rem;
+  text-align: center;
+
+  @include respond-below('lg') {
+    gap: $spacing-2xl;
+  }
+}
+
+.join-community__heading {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 15rem; // 150px
+  line-height: 0.83;
+  color: var(--color-text-primary);
+  margin: 0;
+  max-width: 92.6rem;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 10rem;
+  }
+
+  @include respond-below('lg') {
+    font-size: 6rem;
+  }
+
+  @include respond-below('md') {
+    font-size: 4rem;
+  }
+
+  @include respond-below('sm') {
+    font-size: 3.2rem;
+  }
+}
+
+.join-community__subhead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.join-community__tagline {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 6.4rem; // 64px
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  margin: 0;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 4.6rem;
+  }
+
+  @include respond-below('lg') {
+    font-size: 3.2rem;
+  }
+
+  @include respond-below('md') {
+    font-size: 2.4rem;
+  }
+}
+
+.join-community__tagline-muted {
+  color: #777;
+
+  [data-theme='dark'] & {
+    color: rgba(239, 239, 239, 0.4);
+  }
+}
+
+.join-community__desc {
+  font-family: $font-family-base;
+  font-weight: $font-weight-medium;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: #1e1e1e;
+  margin: 0;
+
+  [data-theme='dark'] & {
+    color: #afafaf;
+  }
+
+  @include respond-below('md') {
+    font-size: 1.4rem;
+  }
+}
+
+.join-community__form {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex-wrap: wrap; // safety net: wraps the button below rather than
+  // overflowing the row (and the whole page into x-scroll) at widths
+  // where the fixed-width pill + button + gap don't fit side by side
+  gap: 1.6rem;
+  width: 100%;
+  max-width: 100%;
+
+  @include respond-below('md') {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+// ── Email Pill (exact Figma colors — see file header) ─────────
+.join-community__input.form-group {
+  position: relative; // anchors the absolutely-positioned error below
+  width: min(51.8rem, 100%);
+
+  // The stacked layout below 'md' puts the submit button at 100%
+  // width — without matching this to 100% too, the pill stays pinned
+  // at its natural 51.8rem while the button spans the full container,
+  // leaving two stacked fields at visibly different widths.
+  @include respond-below('md') {
+    width: 100%;
+  }
+
+  // The row above bottom-aligns the input against the button
+  // (align-items: flex-end). An error message normally adds height
+  // below the input and would push that alignment reference down,
+  // making the button look too high relative to the pill — taking it
+  // out of the flex flow keeps the group's own height (and the
+  // button's alignment) fixed regardless of error state.
+  .form-group__error {
+    position: absolute;
+    top: 100%;
+    left: 2.6rem;
+    margin-top: 0.6rem;
+  }
+}
+
+.join-community__input .form-input {
+  height: 7rem !important;
+  padding: 0 2.6rem !important;
+  font-family: $font-family-base !important;
+  font-size: 1.8rem !important;
+  font-weight: $font-weight-regular !important;
+  color: #0c0c0c !important;
+  background-color: rgba(242, 242, 242, 0.8) !important;
+  border: 1px solid #c7c7c7 !important;
+  box-shadow: none !important;
+
+  &::placeholder {
+    color: #585959 !important;
+    opacity: 1 !important;
+  }
+
+  &:focus {
+    border-color: #1d1d1d !important;
+    box-shadow: 0 0 0 2px rgba(29, 29, 29, 0.15) !important;
+  }
+
+  // Our own border/box-shadow above beats _forms.scss's own
+  // .form-input--error rule on specificity (two classes vs one), which
+  // was silently swallowing the red error state — restore it explicitly.
+  &.form-input--error {
+    border-color: var(--color-error) !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+  }
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: #0c0c0c !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(242, 242, 242, 0.8) inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  [data-theme='dark'] & {
+    color: #efefef !important;
+    background-color: rgba(29, 29, 29, 0.8) !important;
+    border-color: transparent !important;
+
+    &::placeholder {
+      color: rgba(239, 239, 239, 0.4) !important;
+    }
+
+    &:focus {
+      border-color: rgba(239, 239, 239, 0.3) !important;
+      box-shadow: 0 0 0 2px rgba(239, 239, 239, 0.15) !important;
+    }
+
+    &.form-input--error {
+      border-color: var(--color-error) !important;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+    }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-text-fill-color: #efefef !important;
+      -webkit-box-shadow: 0 0 0 1000px rgba(29, 29, 29, 0.8) inset !important;
+    }
+  }
+}
+
+// Theme-invariant flip (same pattern as .contact-us__submit /
+// .ecosystem__cta / .what-we-do__cta) — Figma's button is dark-on-
+// light in light theme, light-on-dark in dark theme.
+.join-community__submit.btn-common--primary {
+  flex-shrink: 0;
+  height: 6.9rem;
+  padding: 0 5.1rem;
+  font-size: 2rem;
+  font-weight: $font-weight-semibold;
+  text-transform: capitalize;
+  background-color: #1d1d1d;
+  border-color: #1d1d1d;
+  color: #fefefe;
+
+  &:hover {
+    background-color: #000;
+    border-color: #000;
+    color: #fefefe;
+  }
+
+  [data-theme='dark'] & {
+    background-color: #efefef;
+    border-color: #efefef;
+    color: #0c0c0c;
+
+    &:hover {
+      background-color: #fff;
+      border-color: #fff;
+      color: #0c0c0c;
+    }
+  }
+
+  @include respond-below('md') {
+    width: 100%;
+  }
+}

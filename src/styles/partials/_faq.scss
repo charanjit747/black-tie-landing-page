@@ -1,0 +1,271 @@
+// ============================================================
+// _faq.scss — Frequently Asked Questions (accordion, 4 items)
+//
+// Expand/collapse uses a CSS grid-template-rows 0fr → 1fr transition,
+// not a measured/animated height — the react-slick saga a few
+// sections up (a slider needing a pixel height measured in JS,
+// fighting a responsive CSS size across breakpoints) is exactly the
+// class of bug this sidesteps: grid-rows animates to "however tall the
+// content actually is" with no measurement step, so it can never go
+// stale across a resize.
+//
+// The heading's two-tone split is deliberately NOT the usual "first
+// part full color, second part muted in both themes" pattern used
+// everywhere else on this page — Figma has it reversed in dark theme
+// (first part muted, second part full white); confirmed by reading
+// both Home-Light and Home-Dark directly rather than assuming
+// symmetry, so it's reproduced exactly as designed.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.faq {
+  position: relative; // anchors .section-bg-lines — see _background-lines.scss
+  padding: $spacing-3xl 0;
+
+  @include respond-below('md') {
+    padding: $spacing-2xl 0;
+  }
+}
+
+.faq__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  text-align: center;
+  padding-bottom: 8.3rem;
+
+  @include respond-below('narrow-desktop') {
+    padding-bottom: 6rem;
+  }
+
+  @include respond-below('lg') {
+    padding-bottom: $spacing-2xl;
+  }
+}
+
+.faq__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-semibold;
+  font-size: 1.6rem;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+.faq__tag-lower {
+  text-transform: lowercase;
+}
+
+// See file header — this half of the heading is full color in light
+// theme but MUTED in dark theme (the opposite of .faq__heading-muted).
+.faq__heading {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 6.4rem; // 64px
+  line-height: 1.2;
+  color: #1d1d1d;
+  margin: 0;
+
+  [data-theme='dark'] & {
+    color: #4c4c4c;
+  }
+
+  @include respond-below('narrow-desktop') {
+    font-size: 4.6rem;
+  }
+
+  @include respond-below('lg') {
+    font-size: 3.2rem;
+  }
+
+  @include respond-below('md') {
+    font-size: 2.4rem;
+  }
+}
+
+// See file header — MUTED in light theme, full white in dark theme
+// (the opposite of the usual convention elsewhere on this page).
+.faq__heading-muted {
+  color: #777;
+
+  [data-theme='dark'] & {
+    color: #fff;
+  }
+}
+
+.faq__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 172rem;
+  margin: 0 auto;
+}
+
+.faq__item {
+  border-radius: 2rem;
+  background-color: #f2f2f2;
+  transition: background-color $transition-base;
+
+  [data-theme='dark'] & {
+    background-color: #0c0c0c;
+    border: 1px solid rgba(118, 118, 118, 0.2);
+  }
+
+  &--open {
+    background-color: #141515;
+
+    [data-theme='dark'] & {
+      background-color: #1d1d1d;
+      border-color: transparent;
+    }
+  }
+}
+
+.faq__question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  width: 100%;
+  padding: 2.2rem 2.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+
+  @include respond-below('lg') {
+    padding: $spacing-lg $spacing-md;
+  }
+
+  @include respond-below('md') {
+    padding: $spacing-md $spacing-lg;
+  }
+}
+
+.faq__question-text {
+  font-family: $font-family-base;
+  font-weight: $font-weight-regular;
+  font-size: 3.2rem;
+  line-height: 1.2;
+  color: #1d1d1d;
+  transition: color $transition-base;
+
+  [data-theme='dark'] & {
+    color: #4c4c4c;
+  }
+
+  .faq__item--open & {
+    font-weight: $font-weight-bold;
+    color: #fff;
+
+    [data-theme='dark'] & {
+      color: #fff;
+    }
+  }
+
+  @include respond-below('narrow-desktop') {
+    font-size: 2.4rem;
+  }
+
+  @include respond-below('lg') {
+    font-size: 2rem;
+  }
+
+  @include respond-below('md') {
+    font-size: 1.7rem;
+  }
+}
+
+// Animated plus → minus: the horizontal bar always shows; the vertical
+// bar scales away on open, leaving just the horizontal (a minus sign).
+.faq__toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.faq__toggle-bar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background-color: #090705;
+  border-radius: 0.2rem;
+  transition:
+    transform $transition-base,
+    background-color $transition-base;
+
+  [data-theme='dark'] & {
+    background-color: #fff;
+  }
+
+  .faq__item--open & {
+    background-color: #fff;
+
+    [data-theme='dark'] & {
+      background-color: #fff;
+    }
+  }
+
+  &--h {
+    width: 1.6rem;
+    height: 0.2rem;
+    transform: translate(-50%, -50%);
+  }
+
+  &--v {
+    width: 0.2rem;
+    height: 1.6rem;
+    transform: translate(-50%, -50%);
+
+    .faq__item--open & {
+      transform: translate(-50%, -50%) scaleY(0);
+    }
+  }
+}
+
+// The grid-rows expand/collapse trick — see file header.
+.faq__answer-rows {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows $transition-slow;
+
+  .faq__item--open & {
+    grid-template-rows: 1fr;
+  }
+}
+
+.faq__answer-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.faq__answer {
+  font-family: $font-family-base;
+  font-weight: $font-weight-medium;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: #fff;
+  margin: 0;
+  padding: 0 2.8rem 2.3rem;
+
+  @include respond-below('lg') {
+    padding: 0 $spacing-md $spacing-md;
+  }
+
+  @include respond-below('md') {
+    padding: 0 $spacing-lg $spacing-lg;
+    font-size: 1.4rem;
+  }
+}
