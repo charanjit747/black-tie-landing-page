@@ -1,0 +1,279 @@
+// ============================================================
+// _dashboard-showcase.scss — Sticky scroll showcase (Dashboard / BTX
+// Markets / Investment Orders / Payment Screen)
+//
+// Desktop (≥ $bp-desktop-sm): a GSAP ScrollTrigger pins the right-side
+// screenshot column from when the list reaches the top of the viewport
+// until the LAST heading reaches the vertical center of the viewport
+// (see initDashboardShowcaseAnimation in utils/gsapAnimations.ts),
+// crossfading between the 4 stacked images the instant each item's own
+// heading enters the bottom 20% of the viewport. Below that breakpoint
+// the animation doesn't run at all — this falls back to a plain stacked
+// layout, each item with its own inline image directly beneath it.
+//
+// Theme-reactive text (confirmed against both Home-Light and Home-Dark
+// in Figma): near-black/near-white index+title, and a muted second
+// word/line at 60% opacity light / 40% dark — the same convention
+// already used for .how-it-works__heading-muted and
+// .launch-scale__heading-muted. The 4 screenshots themselves are the
+// same asset in both themes (a fixed dark product UI), so only the
+// text and the image frame's gradient border adapt.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.dashboard-showcase {
+  position: relative; // anchors .section-bg-lines — see _background-lines.scss
+  background-color: var(--color-bg-primary);
+  padding: $spacing-4xl 0;
+
+  @include respond-below('narrow-desktop') {
+    padding: 7.2rem 0;
+  }
+
+  @include respond-below('md') {
+    padding: $spacing-3xl 0;
+  }
+
+  @include respond-below('xs') {
+    padding: $spacing-2xl 0;
+  }
+}
+
+// ── Two-column layout ────────────────────────────────────────
+// Figma: ~505px item column : 1195px image column, 20px gap.
+.dashboard-showcase__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 30fr) minmax(0, 70fr);
+  gap: 2rem;
+
+  // Below this, the sticky/pin animation doesn't run at all (see
+  // initDashboardShowcaseAnimation) — matches with a plain single
+  // column instead, so the layout switch lines up exactly with where
+  // the JS switches too.
+  @include respond-below('desktop-sm') {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.dashboard-showcase__list {
+  display: flex;
+  flex-direction: column;
+
+  // Mobile/tablet fallback (see .dashboard-showcase__item-image) — 2
+  // cards per row from 768px up to $bp-desktop-sm, where the pinned
+  // media column and its own single-column list take over instead; a
+  // single column again below 768px. Row spacing here (not on the item
+  // itself) is what used to be each item's own padding-bottom — a grid
+  // gap replaces that now that items sit side by side, not just stacked.
+  @include respond-below('desktop-sm') {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: $spacing-lg;
+    row-gap: $spacing-4xl;
+  }
+
+  @include respond-below('md') {
+    grid-template-columns: 1fr;
+    row-gap: $spacing-3xl;
+  }
+
+  @include respond-below('xs') {
+    row-gap: $spacing-2xl;
+  }
+}
+
+.dashboard-showcase__item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.6rem; // 16px
+  min-height: 90vh;
+
+  @include respond-below('desktop-sm') {
+    min-height: 0;
+    justify-content: flex-start;
+    gap: $spacing-lg;
+  }
+}
+
+// Just the heading text — the actual crossfade trigger (see
+// initDashboardShowcaseAnimation). Kept as its own element rather than
+// using .dashboard-showcase__item directly, since the item is a much
+// taller (90vh) flex box with the heading centered inside it; triggering
+// off the item's own top would fire the crossfade long before the
+// heading is anywhere near the viewport.
+.dashboard-showcase__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.dashboard-showcase__index {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-regular;
+  font-size: 8rem; // 80px
+  line-height: 1;
+  margin: 0;
+  // Figma: the numeral fades out toward its own bottom edge via a
+  // text-clipped gradient rather than a flat color.
+  background: linear-gradient(to bottom, var(--color-text-primary) 31%, transparent 112%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 6rem;
+  }
+
+  @include respond-below('desktop-sm') {
+    font-size: 5rem;
+  }
+
+  @include respond-below('xs') {
+    font-size: 4rem;
+  }
+}
+
+.dashboard-showcase__title {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 5.8rem; // 58px
+  line-height: 1.15;
+  color: var(--color-text-primary);
+  margin: 0;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 4.2rem;
+  }
+
+  @include respond-below('desktop-sm') {
+    font-size: 3.2rem;
+  }
+
+  @include respond-below('xs') {
+    font-size: 2.6rem;
+  }
+
+  // One line instead of the desktop's forced break onto a muted second
+  // line (e.g. "BTX Markets" instead of "BTX" / "Markets") — the <br/>
+  // it's built around only matters above this breakpoint.
+  @include respond-below('desktop-sm') {
+    br {
+      display: none;
+    }
+  }
+}
+
+// The second word/line of a two-line title (e.g. "Markets" under
+// "BTX") — same muted-second-line treatment as elsewhere in this
+// project, not a flat color, since it needs a different opacity per
+// theme rather than one fixed value.
+.dashboard-showcase__title-muted {
+  color: var(--color-text-primary);
+  opacity: 0.6;
+
+  [data-theme='dark'] & {
+    opacity: 0.4;
+  }
+}
+
+// ── Right column: the pinned/crossfading screenshots ────────
+// GSAP pins this wrapper (not the image box itself) — see
+// initDashboardShowcaseAnimation. Its own height is a fixed 100vh
+// (align-self: start keeps it from stretching to the grid row's full,
+// much taller, height, which would make it balloon into the section
+// above once pinned), and the actual aspect-ratio image box is centered
+// inside it with plain flexbox rather than any percentage-based offset.
+// Hidden below $bp-desktop-sm — see .dashboard-showcase__item-image for
+// the mobile equivalent.
+.dashboard-showcase__media {
+  position: relative;
+  align-self: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop. The image
+  // itself shrinks (see .dashboard-showcase__media-inner); once it's
+  // no longer full-width, flex-end keeps it flush to the right of the
+  // column instead of centered with equal gaps on both sides.
+  @include respond-below('narrow-desktop') {
+    justify-content: flex-end;
+  }
+
+  @include respond-below('desktop-sm') {
+    display: none;
+  }
+}
+
+.dashboard-showcase__media-inner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1195 / 787;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop. 20%
+  // smaller, aligned to the right of .dashboard-showcase__media (see
+  // above) rather than centered.
+  @include respond-below('narrow-desktop') {
+    width: 80%;
+  }
+}
+
+.dashboard-showcase__image {
+  position: absolute;
+  inset: 0;
+  opacity: 0; // matches the GSAP-set initial state as a no-JS fallback
+  border-radius: 3rem;
+  // Figma: a diagonal gradient border — light gray light theme, dark
+  // gray dark theme. Neither is an existing token (a one-off frame
+  // effect, not reused elsewhere), same reasoning as other hardcoded
+  // one-off colors already in this project.
+  background: linear-gradient(123deg, #d2d2d2 0%, transparent 41%, transparent 67%, #d2d2d2 100%);
+
+  [data-theme='dark'] & {
+    background: linear-gradient(123deg, #484848 0%, transparent 41%, transparent 67%, #484848 100%);
+  }
+
+  &:first-child {
+    opacity: 1; // the initial no-JS/first-paint state before GSAP sets it
+  }
+}
+
+// A separate inset wrapper (not padding on .dashboard-showcase__image
+// itself) — Next's `fill` images size to their immediate parent's
+// border box regardless of that parent's own padding, so the "reveal
+// the gradient behind it" gap needs its own element with `inset`.
+.dashboard-showcase__image-inner {
+  position: absolute;
+  inset: 1rem;
+  border-radius: 2.6rem;
+  overflow: hidden;
+
+  img {
+    object-fit: cover;
+  }
+}
+
+// ── Mobile/tablet fallback: a plain inline image per item ────
+// Only shown below $bp-desktop-sm, where the pinned/crossfading media
+// column above is hidden and the animation doesn't run at all.
+.dashboard-showcase__item-image {
+  display: none;
+  border-radius: 2rem;
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  @include respond-below('desktop-sm') {
+    display: block;
+  }
+}

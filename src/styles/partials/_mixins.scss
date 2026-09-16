@@ -20,6 +20,8 @@
     @media (min-width: #{$bp-2xl}) { @content; }
   } @else if $breakpoint == 'narrow-desktop' {
     @media (min-width: #{$bp-narrow-desktop}) { @content; }
+  } @else if $breakpoint == 'desktop-sm' {
+    @media (min-width: #{$bp-desktop-sm}) { @content; }
   }
 }
 
@@ -39,6 +41,10 @@
   } @else if $breakpoint == 'narrow-desktop' {
     // The master "small desktop" shrink point — see $bp-narrow-desktop.
     @media (max-width: #{$bp-narrow-desktop - 1}) { @content; }
+  } @else if $breakpoint == 'desktop-sm' {
+    // Hover/cursor-driven interactions switch off below this — see
+    // $bp-desktop-sm.
+    @media (max-width: #{$bp-desktop-sm - 1}) { @content; }
   }
 }
 

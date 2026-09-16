@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useField, useFormikContext } from 'formik';
+import { useField } from 'formik';
 import { AlertCircleIcon, CalendarIcon } from '@/constants/icons';
 
 interface FormikDatePickerProps {

@@ -1,0 +1,262 @@
+// ============================================================
+// _security.scss — Security and Compliance at Institutional Standards
+//
+// Deliberately theme-invariant (see Security.tsx) — a near-black card
+// with a red/orange ambient glow and 3 compliance cards, rendering
+// (almost) identically in both Home-Light and Home-Dark. Every color
+// here is a hardcoded one-off rather than a light/dark token, same
+// reasoning as the header's always-dark solid state.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.security {
+  padding: $spacing-3xl 0;
+
+  @include respond-below('md') {
+    padding: $spacing-2xl 0;
+  }
+}
+
+.security__card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3rem;
+  background-color: #000;
+  padding: 12rem 10rem;
+
+  [data-theme='dark'] & {
+    background-color: #1d1d1d;
+  }
+
+  @include respond-below('narrow-desktop') {
+    padding: 8rem 6rem;
+  }
+
+  @include respond-below('lg') {
+    padding: $spacing-2xl $spacing-xl;
+  }
+
+  @include respond-below('md') {
+    padding: $spacing-xl $spacing-md;
+  }
+}
+
+// The ambient glow — a pre-blurred export straight out of Figma (not a
+// live CSS filter: blur), confirmed pixel-identical between light and
+// dark themes, so one asset covers both.
+.security__glow {
+  position: absolute;
+  top: 50%;
+  right: -10rem;
+  transform: translateY(-50%);
+  width: 132.5rem;
+  height: 82.2rem;
+  max-width: 100%;
+  background-image: url('/assets/security/glow.jpg');
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+
+  @include respond-below('lg') {
+    opacity: 0.6;
+  }
+}
+
+.security__heading {
+  position: relative;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 6.4rem; // 64px
+  line-height: 1.2;
+  color: #fff;
+  margin: 0 0 6rem;
+
+  [data-theme='dark'] & {
+    color: #efefef;
+  }
+
+  @include respond-below('narrow-desktop') {
+    font-size: 4.6rem;
+    margin-bottom: 4.8rem;
+  }
+
+  @include respond-below('lg') {
+    font-size: 3.2rem;
+    margin-bottom: $spacing-xl;
+  }
+
+  @include respond-below('xs') {
+    font-size: 2.6rem;
+  }
+}
+
+.security__heading-muted {
+  color: #777;
+
+  [data-theme='dark'] & {
+    color: rgba(239, 239, 239, 0.4);
+  }
+}
+
+.security__row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 4rem;
+
+  @include respond-below('lg') {
+    flex-direction: column;
+    gap: $spacing-lg;
+  }
+}
+
+.security__item {
+  position: relative;
+  overflow: hidden;
+  flex: 1 0 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2rem;
+  padding: 4rem;
+  border-radius: 2.6rem;
+  background-color: #0b0b0b;
+
+  // .security__row switches to flex-direction: column below 'lg' —
+  // `flex: 1 0 0` (a horizontal-row sizing rule: grow, don't shrink,
+  // zero basis) would otherwise apply along that new VERTICAL main
+  // axis instead, collapsing each card toward zero height and clipping
+  // its description/button via overflow: hidden. `flex: none` sizes it
+  // by its own content height instead, like any normal stacked block.
+  @include respond-below('lg') {
+    flex: none;
+    width: 100%;
+  }
+
+  // The border lives on ::after (painted after every real child, i.e.
+  // on top) rather than directly on this element — .security__item-wave
+  // below is taller/wider than the card and spatially overlaps the
+  // edges, and a border painted the normal way sits UNDER child content
+  // in the paint order, so it was getting covered wherever the wave
+  // crossed it. This keeps it visible everywhere, always.
+  //
+  // Not a plain `border` — a 1px gradient ring with uneven opacity
+  // around the perimeter (brighter top/left, fading out toward the
+  // bottom), built via the padding+mask-composite technique: the
+  // pseudo-element paints the gradient across its whole box, then the
+  // mask punches out everything except a 1px ring (padding-box XOR
+  // border-box), so only that ring is visible.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(255, 255, 255, 0.35) 25%,
+      rgba(255, 255, 255, 0.12) 55%,
+      rgba(255, 255, 255, 0.65) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  &--accent {
+    background-color: #002b22;
+
+    &::after {
+      background: linear-gradient(
+        135deg,
+        rgba(0, 255, 210, 0.9),
+        rgba(0, 180, 150, 0.45),
+        rgba(0, 100, 85, 0.3),
+        rgba(0, 220, 180, 0.7)
+      );
+    }
+  }
+
+  @include respond-below('narrow-desktop') {
+    padding: $spacing-xl;
+  }
+
+  @include respond-below('md') {
+    padding: $spacing-lg;
+  }
+}
+
+// The twisted-ribbon graphic, reused across all 3 cards, blended into
+// the card's own background rather than sitting on top of it as a
+// flat image. The source asset itself is pre-darkened (~35% of its
+// original brightness) — mix-blend-mode: screen only ever brightens,
+// so starting from the original (much brighter) export made its
+// highlight streaks blow out to near-white against the card's
+// near-black background, far more prominent than Figma's subtle
+// version. Baking the darkening into the asset (rather than fading the
+// element with CSS opacity) keeps the ribbon's own contrast intact
+// instead of just flattening it toward invisible.
+.security__item-wave {
+  position: absolute;
+  top: 50%;
+  right: -8rem;
+  transform: translateY(-50%);
+  width: 43.7rem;
+  height: 28.7rem;
+  background-image: url('/assets/security/wave.jpg');
+  background-size: cover;
+  background-position: center;
+  mix-blend-mode: screen;
+  pointer-events: none;
+
+  // The accent card fades the ribbon into its teal background instead
+  // of a hard edge.
+  .security__item--accent & {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 15%);
+    mask-image: linear-gradient(to right, transparent, #000 15%);
+  }
+}
+
+// The icon+title row as a single exported image (see Security.tsx) —
+// this just scales the whole lockup as one unit, so there's no live
+// text to clip/overflow at any card width. height controls the
+// display size; width is `auto` so each keeps its own exported aspect
+// ratio instead of being stretched to match the others.
+.security__item-lockup {
+  position: relative;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 3.3rem;
+
+  // A fixed `height` here would fight the global reset's
+  // `img { max-width: 100% }` (_reset.scss) on narrow cards: once that
+  // caps the width, a non-auto height can't shrink to match, breaking
+  // the aspect ratio (visible as stretching/squashing). `max-height`
+  // with both dimensions `auto` lets the browser scale down to fit
+  // whichever constraint is tighter while keeping the ratio intact.
+  @include respond-below('md') {
+    max-height: 2.8rem;
+  }
+}
+
+.security__item-desc {
+  position: relative;
+  font-family: $font-family-base;
+  font-weight: $font-weight-medium;
+  font-size: 1.57rem;
+  line-height: 1.5;
+  color: #fff;
+  max-width: 24.4rem;
+  margin: 0;
+}
+
+.security__item-cta {
+  position: relative;
+}

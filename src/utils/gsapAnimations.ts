@@ -10,8 +10,9 @@
 
 import { gsap } from 'gsap';
 import { SplitText } from 'gsap/SplitText';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-gsap.registerPlugin(SplitText);
+gsap.registerPlugin(SplitText, ScrollTrigger);
 
 // ────────────────────────────────────────────────────────────
 // Hero Section
@@ -299,4 +300,213 @@ export function createHowItWorksHoverStripe(stripe: HTMLElement): HowItWorksHove
   };
 
   return { moveToRow, hide, destroy };
+}
+
+// ────────────────────────────────────────────────────────────
+// Launch and Scale Real World Asset Tokenized Offerings
+// A one-time scroll-triggered reveal: the dark panel slides in from the
+// left while the step cards fade/stagger up behind it, playing once as
+// the section enters the viewport (ScrollTrigger, not scrubbed).
+// ────────────────────────────────────────────────────────────
+
+interface LaunchScaleAnimationRefs {
+  section: HTMLElement;
+  panel: HTMLElement;
+  cards: HTMLElement[];
+}
+
+export function initLaunchScaleAnimation({
+  section,
+  panel,
+  cards,
+}: LaunchScaleAnimationRefs): () => void {
+  const ctx = gsap.context(() => {
+    gsap.set(panel, { autoAlpha: 0, x: -40 });
+    gsap.set(cards, { autoAlpha: 0, y: 28 });
+
+    gsap
+      .timeline({
+        defaults: { ease: 'power3.out' },
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 75%',
+        },
+      })
+      .to(panel, { autoAlpha: 1, x: 0, duration: 0.7 })
+      .to(cards, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12 }, '-=0.4');
+  }, section);
+
+  return () => ctx.revert();
+}
+
+// ────────────────────────────────────────────────────────────
+// Dashboard Showcase (Dashboard / BTX Markets / Investment Orders /
+// Payment Screen)
+// GSAP pins the right column (a full-viewport-height wrapper,
+// flex-centered — see .dashboard-showcase__media) starting when the
+// list reaches the top of the viewport, ending exactly when the LAST
+// heading reaches the vertical center of the viewport — tied directly
+// to that heading via `endTrigger`/`end: 'center center'` rather than
+// an approximated scroll distance, so the section only becomes
+// scrollable again once the last slide is genuinely centered against
+// the image.
+//
+// Crossfade: onEnter/onEnterBack (each heading reactivating itself,
+// once per line, in either direction) is enough — the very next
+// heading's own onEnter already covers "the next one arriving", so
+// mirroring that with onLeave/onLeaveBack on THIS heading would
+// double-fire the crossfade at two different scroll positions.
+//
+// The start/end lines deliberately use DIFFERENT edges of the heading,
+// not the same one twice — that's what makes the two directions feel
+// identical instead of the "top" edge case, where a short heading is
+// already fully visible well before its top reaches the 20% line
+// (a ~20%-of-viewport lag), while going down a heading's top reaching
+// 80% roughly coincides with it just becoming fully visible (near-zero
+// lag). Using the BOTTOM edge for the top exit line mirrors that same
+// near-zero lag: start 'top 80%' (top edge crossing the bottom 20%) for
+// entering from below, end 'bottom 20%' (bottom edge crossing the top
+// 20%) for entering from above.
+// Desktop-only — wrapped in gsap.matchMedia() (the current,
+// non-deprecated API — ScrollTrigger.matchMedia() still exists but
+// GSAP's own docs mark it deprecated in favor of this) so it's fully
+// created/torn down exactly at the $bp-desktop-sm breakpoint, including
+// on a live resize across it, rather than a one-time check at mount.
+// ────────────────────────────────────────────────────────────
+
+interface DashboardShowcaseRefs {
+  list: HTMLElement;
+  media: HTMLElement;
+  headings: HTMLElement[];
+  images: HTMLElement[];
+}
+
+// Must stay in sync with $bp-desktop-sm in _variables.scss.
+const DASHBOARD_SHOWCASE_BREAKPOINT = 1280;
+
+export function initDashboardShowcaseAnimation({
+  list,
+  media,
+  headings,
+  images,
+}: DashboardShowcaseRefs): () => void {
+  const mm = gsap.matchMedia();
+
+  mm.add(`(min-width: ${DASHBOARD_SHOWCASE_BREAKPOINT}px)`, () => {
+    gsap.set(images, { autoAlpha: 0 });
+    gsap.set(images[0], { autoAlpha: 1 });
+
+    const crossfadeTo = (index: number) => {
+      images.forEach((img, i) => {
+        gsap.to(img, { autoAlpha: i === index ? 1 : 0, duration: 0.5, ease: 'power2.out' });
+      });
+    };
+
+    const pinTrigger = ScrollTrigger.create({
+      trigger: list,
+      start: 'top top',
+      endTrigger: headings[headings.length - 1],
+      end: 'center center',
+      pin: media,
+      pinSpacing: false,
+    });
+
+    const headingTriggers = headings.map((heading, index) =>
+      ScrollTrigger.create({
+        trigger: heading,
+        start: 'top 80%', // scrolling down: fires once the heading's top reaches the bottom 20% of the viewport
+        end: 'bottom 20%', // scrolling up: fires once the heading's bottom reaches the top 20% of the viewport
+        onEnter: () => crossfadeTo(index),
+        onEnterBack: () => crossfadeTo(index),
+      })
+    );
+
+    // matchMedia's own cleanup — runs when this query stops matching
+    // (including a live resize past the breakpoint), not just on
+    // unmount.
+    return () => {
+      pinTrigger.kill();
+      headingTriggers.forEach((trigger) => trigger.kill());
+    };
+  });
+
+  return () => mm.revert();
+}
+
+// ────────────────────────────────────────────────────────────
+// Stats (trust bar: Asset Offerings / Target Asset Value / KYC-KYB
+// Verified Participation / Supported Asset Classes)
+// Each number counts up from 0 to its real value once the card scrolls
+// into view, then never repeats — `once: true` so re-scrolling past it
+// doesn't re-trigger the count. Runs at every breakpoint (no
+// gsap.matchMedia gate) since it isn't a hover/cursor interaction.
+// Writes straight to the DOM node's textContent via a plain tween proxy
+// object rather than piping the value through React state on every
+// tick — a 60fps count-up has no business re-rendering a component.
+// ────────────────────────────────────────────────────────────
+
+interface StatsCounterItem {
+  el: HTMLElement;
+  value: number;
+  format: (n: number) => string;
+}
+
+interface StatsCounterRefs {
+  section: HTMLElement;
+  items: StatsCounterItem[];
+}
+
+export function initStatsCounterAnimation({ section, items }: StatsCounterRefs): () => void {
+  const proxies = items.map(() => ({ value: 0 }));
+
+  const trigger = ScrollTrigger.create({
+    trigger: section,
+    start: 'top 80%',
+    once: true,
+    onEnter: () => {
+      items.forEach((item, i) => {
+        gsap.to(proxies[i], {
+          value: item.value,
+          duration: 1.6,
+          ease: 'power2.out',
+          onUpdate: () => {
+            item.el.textContent = item.format(proxies[i].value);
+          },
+        });
+      });
+    },
+  });
+
+  return () => trigger.kill();
+}
+
+// ────────────────────────────────────────────────────────────
+// Partners marquee (Our Partners logo strip)
+// The track's DOM already holds the logo list twice back to back (see
+// Partners.tsx) — animating xPercent from 0 to -50 on an infinite
+// repeat lands exactly on the start of the second (pixel-identical)
+// copy, so the loop point is invisible: no jump, no flicker, no reset.
+// xPercent is relative to the track's own rendered width rather than a
+// fixed pixel distance, so it stays correct at every breakpoint without
+// any resize handling. `ease: 'none'` keeps the speed constant instead
+// of easing in/out on every repeat, which is what a looping marquee
+// needs — an eased loop visibly lurches at each repeat boundary.
+// ────────────────────────────────────────────────────────────
+
+const PARTNERS_MARQUEE_SPEED_PX_PER_SEC = 60;
+
+export function initPartnersMarqueeAnimation(track: HTMLElement): () => void {
+  // Duration derived from the track's actual width (half of it, since
+  // the track holds two copies) so the on-screen speed is constant
+  // regardless of how many logos there are or how wide the viewport is.
+  const duration = track.scrollWidth / 2 / PARTNERS_MARQUEE_SPEED_PX_PER_SEC;
+
+  const tween = gsap.to(track, {
+    xPercent: -50,
+    duration,
+    ease: 'none',
+    repeat: -1,
+  });
+
+  return () => tween.kill();
 }

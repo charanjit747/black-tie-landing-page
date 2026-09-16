@@ -55,7 +55,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, links, 
     timelineRef.current = timeline;
 
     return destroy;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [links.length]);
 
   // Play forward on open a touch faster than normal; close reverses

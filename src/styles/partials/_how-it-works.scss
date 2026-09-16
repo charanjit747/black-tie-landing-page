@@ -14,14 +14,24 @@
 
 .how-it-works {
   background-color: var(--color-bg-primary);
-  padding: $spacing-4xl 0;
+  // No bottom padding — Launch and Scale follows immediately after with
+  // its own top padding/spacing, and the shared background-lines
+  // backdrop starts exactly at this section's own bottom edge (see
+  // SectionBackgroundLines.tsx), so any padding here would just push
+  // that boundary down with empty space.
+  padding: $spacing-4xl 0 0;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    padding: 7.2rem 0 0;
+  }
 
   @include respond-below('md') {
-    padding: $spacing-3xl 0;
+    padding: $spacing-3xl 0 0;
   }
 
   @include respond-below('xs') {
-    padding: $spacing-2xl 0;
+    padding: $spacing-2xl 0 0;
   }
 }
 
@@ -35,6 +45,12 @@
   max-width: 90rem;
   margin: 0 auto;
   padding-bottom: $spacing-3xl;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    gap: 1.5rem;
+    padding-bottom: 4.8rem;
+  }
 
   @include respond-below('md') {
     padding-bottom: $spacing-2xl;
@@ -57,6 +73,11 @@
   text-transform: uppercase;
   color: var(--color-text-primary);
 
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    font-size: $font-size-sm;
+  }
+
   svg {
     flex-shrink: 0;
   }
@@ -71,6 +92,11 @@
   line-height: 1.2;
   color: var(--color-text-primary);
   margin: 0;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    font-size: clamp(2.8rem, 5vw, 4.8rem);
+  }
 }
 
 .how-it-works__heading-muted {
@@ -92,6 +118,11 @@
   color: var(--color-text-secondary);
   max-width: 76rem;
   margin: 0 auto;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    font-size: $font-size-base;
+  }
 
   @include respond-below('xs') {
     font-size: $font-size-sm;
@@ -122,8 +153,9 @@
   pointer-events: none;
   z-index: 0;
 
-  @include respond-below('md') {
-    display: none; // the hover-only interaction doesn't apply on touch
+  // The whole hover interaction is desktop-only — see $bp-desktop-sm.
+  @include respond-below('desktop-sm') {
+    display: none;
   }
 }
 
@@ -150,15 +182,31 @@
     border-top: 1px solid var(--color-border);
   }
 
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    padding: 2.2rem 1.5rem;
+    min-height: 14.5rem;
+  }
+
+  // The whole hover interaction is desktop-only — see $bp-desktop-sm. No
+  // row-level hover/click action below it, so the pointer cursor stops
+  // being an honest affordance; the min-height reservation (only ever
+  // needed to stop the old hover-reveal from shaking rows below it) is
+  // moot too since the description is just permanently in flow here.
+  @include respond-below('desktop-sm') {
+    min-height: auto;
+    cursor: default;
+  }
+
+  // min-height stays `auto` (set above) at md/xs too — no hover-reveal
+  // to reserve space for below $bp-desktop-sm, just padding/gap here.
   @include respond-below('md') {
     padding: 2.4rem 1.6rem;
-    min-height: 15rem;
   }
 
   @include respond-below('xs') {
     padding: 2rem 1.2rem;
     gap: $spacing-md;
-    min-height: 12.5rem;
   }
 }
 
@@ -169,6 +217,11 @@
   min-width: 0;
   opacity: 1;
   will-change: opacity;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    gap: 7rem;
+  }
 
   @include respond-below('lg') {
     gap: $spacing-xl;
@@ -189,6 +242,14 @@
     opacity: 0.3;
     transition: opacity 0.35s ease;
   }
+
+  // The whole hover interaction is desktop-only — see $bp-desktop-sm.
+  // Declared after the (hover: hover) rule above so it still wins on a
+  // desktop browser resized narrower than this, which technically still
+  // reports hover:hover/pointer:fine.
+  @include respond-below('desktop-sm') {
+    opacity: 1;
+  }
 }
 
 .how-it-works__row-index {
@@ -198,6 +259,11 @@
   font-size: $font-size-lg; // 20px
   color: var(--color-text-primary);
   white-space: nowrap;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    font-size: $font-size-base;
+  }
 
   @include respond-below('xs') {
     font-size: $font-size-base;
@@ -221,6 +287,17 @@
   line-height: 1.15;
   color: var(--color-text-primary);
   margin: 0;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    font-size: clamp(1.8rem, 5.5vw, 3.75rem);
+  }
+
+  // A further, flatter step down at $bp-desktop-sm — the fluid clamp
+  // above still reads too large through the upper part of this range.
+  @include respond-below('desktop-sm') {
+    font-size: 2rem;
+  }
 }
 
 .how-it-works__row-desc {
@@ -244,6 +321,21 @@
   line-height: 1.2;
   color: var(--color-text-muted);
   margin: 0;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    font-size: $font-size-sm;
+  }
+
+  // The whole hover interaction is desktop-only — see $bp-desktop-sm.
+  // Below it there's no JS driving this open/closed, so it's just always
+  // visible instead — a plain, always-on description line, not a hover
+  // reveal. `.how-it-works__row-copy`'s own flex `gap` (see above)
+  // already provides the spacing above it once it's back in flow.
+  @include respond-below('desktop-sm') {
+    height: auto;
+    opacity: 1;
+  }
 }
 
 .how-it-works__row-thumb {
@@ -256,8 +348,15 @@
   overflow: hidden;
   will-change: transform, opacity;
 
-  @include respond-below('md') {
-    display: none; // the cursor-follow preview is a desktop-only embellishment
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    width: 10rem;
+    height: 6.5rem;
+  }
+
+  // The whole hover interaction is desktop-only — see $bp-desktop-sm.
+  @include respond-below('desktop-sm') {
+    display: none;
   }
 }
 
@@ -286,6 +385,12 @@
   // crop, just scaled up (Figma gives it a 7.6° tilt instead — see the
   // `rotation` set alongside x/y in createHowItWorksInteraction).
   border-radius: 0;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    width: 37rem;
+    height: 24rem;
+  }
   overflow: hidden;
   pointer-events: none;
   z-index: $z-tooltip;
@@ -299,7 +404,8 @@
     border-width: 0.36rem;
   }
 
-  @include respond-below('md') {
+  // The whole hover interaction is desktop-only — see $bp-desktop-sm.
+  @include respond-below('desktop-sm') {
     display: none;
   }
 }

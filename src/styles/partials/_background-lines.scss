@@ -1,0 +1,32 @@
+// ============================================================
+// _background-lines.scss — Shared decorative column-grid backdrop
+// See SectionBackgroundLines.tsx for the full rationale/usage pattern.
+// ============================================================
+
+@use 'variables' as *;
+
+.section-bg-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  // Figma: 7 columns, #1d1d1d dividers at 10% opacity. color-mix keeps
+  // this on the existing --color-text-primary token (already flips
+  // dark/light near-black ↔ near-white per theme) rather than a new
+  // hardcoded color that would only read correctly in one theme.
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-text-primary) 10%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: calc(100% / 7) 100%;
+}
+
+// Ensures whatever comes after the lines layer (within the same
+// section) paints above it — one rule here instead of repeating
+// `position: relative; z-index: 1;` on every section's own content
+// wrapper each time this backdrop is used.
+.section-bg-lines ~ * {
+  position: relative;
+  z-index: 1;
+}

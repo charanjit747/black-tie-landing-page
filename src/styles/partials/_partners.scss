@@ -1,0 +1,214 @@
+// ============================================================
+// _partners.scss — "Our Partners" trust-logo marquee (Trusted by
+// Industry-Leading Partners)
+//
+// Plain section on the page background (no card, unlike Stats above
+// it) — a 3-up header row (tag / heading / description) over an
+// infinite-loop logo strip. The strip's actual scroll animation lives
+// in initPartnersMarqueeAnimation (utils/gsapAnimations.ts); this file
+// only lays out the (already doubled, see Partners.tsx) track and the
+// left/right fade-to-background masks over its edges.
+//
+// Logo color: most of these logos are naturally black/near-black —
+// invisible against a dark theme's near-black page background. Every
+// logo (not just Arizore) gets recolored to a white silhouette in dark
+// theme via the same brightness(0)+invert(1) filter; Arizore is the
+// only one that also needs a light-theme override (brightness(0)
+// alone), since its source is already a pre-colored white silhouette
+// rather than a natural brand-colored raster — see
+// .partners__logo--mono.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.partners {
+  position: relative; // anchors .section-bg-lines — see _background-lines.scss
+  padding: $spacing-3xl 0;
+
+  @include respond-below('md') {
+    padding: $spacing-2xl 0;
+  }
+}
+
+// ── Header row: tag / heading / description ─────────────────
+.partners__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-xl;
+  padding-bottom: 3rem;
+
+  @include respond-below('lg') {
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+}
+
+.partners__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  flex-shrink: 0;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-semibold;
+  font-size: 1.6rem;
+  letter-spacing: -0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+
+  svg {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+}
+
+.partners__heading {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 6.4rem; // 64px
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  margin: 0;
+  max-width: 83.6rem;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 4.6rem;
+  }
+
+  @include respond-below('lg') {
+    font-size: 3.6rem;
+    max-width: 100%;
+  }
+
+  @include respond-below('xs') {
+    font-size: 2.8rem;
+  }
+}
+
+.partners__heading-muted {
+  color: var(--color-text-primary);
+  opacity: 0.5;
+
+  [data-theme='dark'] & {
+    opacity: 0.4;
+  }
+}
+
+.partners__desc {
+  font-family: $font-family-base;
+  font-weight: $font-weight-medium;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+  max-width: 56.1rem;
+  margin: 0;
+
+  @include respond-below('lg') {
+    max-width: 100%;
+  }
+}
+
+// ── Marquee ──────────────────────────────────────────────────
+.partners__marquee {
+  position: relative;
+  overflow: hidden;
+  padding: 5rem 0;
+
+  @include respond-below('md') {
+    padding: $spacing-xl 0;
+  }
+
+  // Fade the strip to the page background at both edges — matches the
+  // page's actual background rather than a hardcoded white/black, so it
+  // stays correct in both themes without a separate override.
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 23rem;
+    z-index: 1;
+    pointer-events: none;
+
+    @include respond-below('md') {
+      width: 8rem;
+    }
+  }
+
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, var(--color-bg-primary), transparent);
+  }
+
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, var(--color-bg-primary), transparent);
+  }
+}
+
+// The track is twice the logo list's real width (see Partners.tsx) —
+// GSAP animates its xPercent, so its own width just needs to be
+// `width: max-content` to let both copies lay out at full size instead
+// of being squeezed into the viewport.
+.partners__track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.partners__set {
+  display: flex;
+  align-items: center;
+  gap: 6.4rem;
+  padding-right: 6.4rem;
+
+  @include respond-below('narrow-desktop') {
+    gap: 4.8rem;
+    padding-right: 4.8rem;
+  }
+
+  @include respond-below('md') {
+    gap: $spacing-xl;
+    padding-right: $spacing-xl;
+  }
+}
+
+.partners__logo-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 3.5rem;
+
+  @include respond-below('narrow-desktop') {
+    height: 2.8rem;
+  }
+
+  @include respond-below('md') {
+    height: 2.2rem;
+  }
+}
+
+.partners__logo {
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+
+  // Most of these logos are natural black/near-black — recolor every
+  // one to a white silhouette in dark theme so none of them disappear
+  // against the near-black page background.
+  [data-theme='dark'] & {
+    filter: brightness(0) invert(1);
+  }
+}
+
+// Arizore only — see file header. Its source is already a pre-colored
+// white silhouette, so light theme needs its own override
+// (brightness(0) alone, forcing it to solid black); the dark-theme
+// rule above already leaves it correctly white (brightness(0) on an
+// already-white source stays black, then invert(1) flips it back to
+// white — same end result as every other logo).
+.partners__logo--mono {
+  filter: brightness(0);
+}

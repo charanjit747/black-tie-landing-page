@@ -8,10 +8,10 @@
 //                  (inset 49px from the top, exactly as in Figma) —
 //                  only true at the very top of the homepage.
 //  --solid       : a fixed dark background (not theme-driven — it's the
-//                  same dark value in both themes) plus a 1rem
-//                  backdrop-filter blur. Used once scrolled on the
-//                  homepage, and always on every inner page (there's no
-//                  hero behind those to float over).
+//                  same dark value in both themes), fully opaque, no
+//                  blur or shadow. Used once scrolled on the homepage
+//                  (identical to every inner page's header — there's no
+//                  hero behind either to float over).
 // ============================================================
 
 @use 'variables' as *;
@@ -30,6 +30,10 @@ body .container.site-header__container {
   max-width: 177rem; // 1770px (1rem = 10px)
 }
 
+// Global small-desktop size-down — see $bp-narrow-desktop. ~25% tighter
+// than Figma's 32px.
+$header-inset-top-narrow: 2.4rem;
+
 .site-header {
   position: fixed;
   top: $header-inset-top;
@@ -39,6 +43,10 @@ body .container.site-header__container {
   transition:
     top $transition-slow,
     transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); // smooth reveal on scroll-up
+
+  @include respond-below('narrow-desktop') {
+    top: $header-inset-top-narrow;
+  }
 
   @include respond-below('md') {
     top: $spacing-md;
@@ -54,6 +62,12 @@ body .container.site-header__container {
     transition:
       top $transition-slow,
       transform 0.3s cubic-bezier(0.7, 0, 0.84, 0); // quick exit
+
+    // Matches the narrower `top` above — otherwise this assumes the
+    // full-size offset and leaves a sliver of the header peeking in.
+    @include respond-below('narrow-desktop') {
+      transform: translateY(calc(-100% - #{$header-inset-top-narrow} - #{$spacing-xl}));
+    }
 
     @include respond-below('md') {
       transform: translateY(calc(-100% - #{$spacing-md} - #{$spacing-xl}));
@@ -80,22 +94,11 @@ body .container.site-header__container {
     -webkit-backdrop-filter: none;
   }
 
-  // ── Blurred state (home, once scrolled) ────────────────────
-  // NO background color at all — only a blur, plus a soft white glow to
-  // separate it from whatever's scrolling behind it. Nothing behind the
-  // header changes color, ever.
-  &--blurred &__inner {
-    background: transparent;
-    backdrop-filter: blur(1rem);
-    -webkit-backdrop-filter: blur(1rem);
-    box-shadow: 0 0 0.4rem rgba(255, 255, 255, 0.1);
-  }
-
-  // ── Solid state (any inner page, always) ───────────────────
+  // ── Solid state (home once scrolled, and any inner page, always) ──
   // A fixed dark background — literally the same #111827 already used
   // for --color-header-bg in the dark theme, hardcoded rather than read
   // from the CSS variable so it never changes with the light/dark
-  // toggle. Fully opaque, so no blur is needed here.
+  // toggle. Fully opaque, so no blur or shadow is needed here.
   &--solid &__inner {
     background-color: #111827;
     backdrop-filter: none;
@@ -114,6 +117,13 @@ body .container.site-header__container {
 
       @include respond-to('lg') {
         width: 150px;
+      }
+
+      // Global small-desktop size-down — see $bp-narrow-desktop. Wins
+      // over the 150px 'lg' rule above via source order (both match at
+      // this width, equal specificity).
+      @include respond-below('narrow-desktop') {
+        width: 110px;
       }
     }
 
@@ -209,6 +219,17 @@ body .container.site-header__container {
       height: 22px;
     }
 
+    // Global small-desktop size-down — see $bp-narrow-desktop.
+    @include respond-below('narrow-desktop') {
+      width: 38px;
+      height: 38px;
+
+      svg {
+        width: 17px;
+        height: 17px;
+      }
+    }
+
     &:hover {
       background-color: var(--color-brand-accent);
       border-color: var(--color-brand-accent);
@@ -231,6 +252,17 @@ body .container.site-header__container {
 
     @include respond-to('xl') {
       display: none;
+    }
+
+    // Global small-desktop size-down — matches &__theme-toggle beside it.
+    @include respond-below('narrow-desktop') {
+      width: 38px;
+      height: 38px;
+
+      svg {
+        width: 17px;
+        height: 17px;
+      }
     }
 
     &:hover {

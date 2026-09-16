@@ -13,10 +13,16 @@
 // ── Component Partials ───────────────────────────────────────
 @use 'partials/button';
 @use 'partials/hover-slide';
+@use 'partials/background-lines';
 @use 'partials/header';
 @use 'partials/mobile-menu';
 @use 'partials/hero';
 @use 'partials/how-it-works';
+@use 'partials/launch-scale';
+@use 'partials/dashboard-showcase';
+@use 'partials/stats';
+@use 'partials/partners';
+@use 'partials/security';
 @use 'partials/footer';
 @use 'partials/slider';
 @use 'partials/forms';

@@ -61,6 +61,10 @@ const STEPS = [
   },
 ] as const;
 
+// Must stay in sync with $bp-desktop-sm in _variables.scss — the width
+// below which the whole hover/popout interaction switches off.
+const DESKTOP_INTERACTION_BREAKPOINT = 1280;
+
 // ── Component ────────────────────────────────────────────────
 // FAQ-style step list — each row's own small thumbnail hides on hover
 // while a single shared "big preview" fades in and follows the cursor
@@ -80,6 +84,26 @@ export const HowItWorks: React.FC = () => {
   const activeRowIndexRef = useRef<number | null>(null);
   const lastClientPosRef = useRef({ x: 0, y: 0 });
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  // The whole hover/popout/scroll-tracking interaction is desktop-only —
+  // see $bp-desktop-sm in _variables.scss. Below it the CSS side already
+  // hides the thumb/preview/stripe and shows the description permanently
+  // (a plain, always-visible layout, per the request), but the JS side
+  // still needs its own gate: without it, resizing a desktop window
+  // narrower would leave stale mouse handlers armed even though nothing
+  // for them to animate is visible any more. `isInteractive` starts true
+  // (matches the default/SSR-safe desktop assumption) and is corrected
+  // by the matchMedia listener below on mount and on resize.
+  const isInteractiveRef = useRef(true);
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(min-width: ${DESKTOP_INTERACTION_BREAKPOINT}px)`);
+    const update = () => {
+      isInteractiveRef.current = mql.matches;
+    };
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     if (!previewRef.current) return;
@@ -119,6 +143,19 @@ export const HowItWorks: React.FC = () => {
     let rafId: number;
 
     const tick = () => {
+      // Covers resizing the window from desktop-width down past the
+      // interaction breakpoint while a row happened to be mid-hover —
+      // clears it immediately rather than leaving it tracked against a
+      // row the CSS side has since display:none'd.
+      if (!isInteractiveRef.current) {
+        const index = activeRowIndexRef.current;
+        const row = index === null ? null : rowRefs.current[index];
+        if (row) interactionRef.current?.deactivate(row);
+        activeRowIndexRef.current = null;
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+
       const index = activeRowIndexRef.current;
       const row = index === null ? null : rowRefs.current[index];
 
@@ -153,6 +190,7 @@ export const HowItWorks: React.FC = () => {
   };
 
   const handleMouseEnter = (index: number, image: string) => (e: React.MouseEvent) => {
+    if (!isInteractiveRef.current) return;
     setActiveImage(image);
     activeRowIndexRef.current = index;
     lastClientPosRef.current = { x: e.clientX, y: e.clientY };
@@ -164,12 +202,14 @@ export const HowItWorks: React.FC = () => {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isInteractiveRef.current) return;
     lastClientPosRef.current = { x: e.clientX, y: e.clientY };
     const { x, y } = toListCoords(e);
     interactionRef.current?.moveTo(x, y);
   };
 
   const handleMouseLeave = (index: number) => () => {
+    if (!isInteractiveRef.current) return;
     if (activeRowIndexRef.current === index) activeRowIndexRef.current = null;
     const row = rowRefs.current[index];
     if (row) interactionRef.current?.deactivate(row);
@@ -179,6 +219,7 @@ export const HowItWorks: React.FC = () => {
   // moving between adjacent rows re-targets it instead (see
   // handleMouseEnter), which is what makes it glide rather than flicker.
   const handleListMouseLeave = () => {
+    if (!isInteractiveRef.current) return;
     stripeInteractionRef.current?.hide();
   };
 

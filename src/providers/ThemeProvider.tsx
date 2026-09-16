@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setTheme } from '@/store/slices/themeSlice';
 import type { ThemeMode } from '@/constants/colors';
@@ -16,7 +16,10 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const dispatch = useAppDispatch();
   const theme = useAppSelector((state) => state.theme.mode);
-  const [initialized, setInitialized] = useState(false);
+  // Marks whether effect 2 below has already run once — a plain ref
+  // flip, not React state, since this only needs to skip that effect's
+  // own first invocation (see there for why), not trigger a render.
+  const isFirstSync = useRef(true);
 
   // ── 1. On mount: load saved theme from localStorage into Redux ──
   useEffect(() => {
@@ -31,12 +34,20 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     } catch {
       // Ignore storage errors (e.g. private browsing)
     }
-    setInitialized(true);
   }, [dispatch]);
 
-  // ── 2. Sync to DOM & localStorage ONLY after initial hydration ──
+  // ── 2. Sync to DOM & localStorage whenever the theme actually changes ──
+  // Skips its own first run — effect 1 above already set the correct
+  // initial DOM attribute directly from localStorage; re-doing it here on
+  // mount would instead write this render's stale default `theme` value
+  // (Redux's dispatch from effect 1 hasn't resolved into a re-render yet
+  // at this point in the same commit), flashing the wrong theme for a
+  // frame before the real one catches up.
   useEffect(() => {
-    if (!initialized) return;
+    if (isFirstSync.current) {
+      isFirstSync.current = false;
+      return;
+    }
 
     document.documentElement.setAttribute('data-theme', theme);
     try {
@@ -44,7 +55,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     } catch {
       // Ignore storage errors
     }
-  }, [theme, initialized]);
+  }, [theme]);
 
   return <>{children}</>;
 }

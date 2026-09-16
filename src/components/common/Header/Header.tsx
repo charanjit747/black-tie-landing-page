@@ -41,10 +41,17 @@ export const Header: React.FC = () => {
   // Transparent glass state only applies on the homepage hero, before scroll.
   const isTransparent = isHome && !scrolled;
 
-  // Close mobile menu on route change
-  useEffect(() => {
+  // Close mobile menu on route change — adjusted during render (React's
+  // own recommended pattern for "reset state when a prop changes",
+  // using state rather than a ref to track the previous value so it
+  // stays correct under concurrent rendering) rather than in an effect,
+  // which would call setState synchronously on every render and trigger
+  // a redundant extra render each time.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setMenuOpen(false);
-  }, [pathname]);
+  }
 
   // Hide the header the moment the user scrolls down at all, reveal it the
   // moment they scroll back up. The background (transparent ↔ solid) is
@@ -106,17 +113,11 @@ export const Header: React.FC = () => {
       <header
         className={[
           'site-header',
-          // Three distinct states — never the same rule for two different
-          // situations:
-          //  - home, at the top: fully transparent, nothing behind it yet.
-          //  - home, scrolled: still no background color at all — just a
-          //    backdrop-filter blur.
-          //  - any inner page: a fixed solid dark background (the same
-          //    hex already used for --color-header-bg in the dark theme),
-          //    no blur needed since it's fully opaque.
-          isHome
-            ? (isTransparent ? 'site-header--transparent' : 'site-header--blurred')
-            : 'site-header--solid',
+          // Two distinct states — home is transparent only at the very
+          // top, before there's any scroll; the instant it scrolls it
+          // matches every inner page exactly (same solid background, no
+          // blur, no shadow).
+          isTransparent ? 'site-header--transparent' : 'site-header--solid',
           hidden ? 'site-header--hidden' : '',
         ].filter(Boolean).join(' ')}
         role="banner"

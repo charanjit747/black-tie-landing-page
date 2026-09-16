@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import Slider, { Settings } from 'react-slick';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/constants/icons';
 

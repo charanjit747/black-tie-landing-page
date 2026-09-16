@@ -1,0 +1,283 @@
+// ============================================================
+// _launch-scale.scss — "Launch and Scale Real World Asset Tokenized
+// Offerings" Section (the Asset Manager card list)
+//
+// Two-column layout: a theme-invariant dark hero-style card on the left
+// (identical classes/colors in both Home-Light and Home-Dark in Figma —
+// same treatment as the Hero card) and a 5-step icon/title/desc card
+// list on the right, which IS theme-reactive (confirmed against both
+// themes): white/#dfdfdf-border cards in light, #1d1d1d/borderless
+// cards in dark — reusing --color-bg-card/--color-border for light and
+// a hardcoded dark override for the one value neither existing token
+// matches exactly (same pattern already used for the header's solid bg
+// and the how-it-works preview's dark border).
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.launch-scale {
+  position: relative; // anchors .section-bg-lines — see _background-lines.scss
+  background-color: var(--color-bg-primary);
+  padding: $spacing-4xl 0;
+
+  @include respond-below('narrow-desktop') {
+    padding: 7.2rem 0;
+  }
+
+  @include respond-below('md') {
+    padding: $spacing-3xl 0;
+  }
+
+  @include respond-below('xs') {
+    padding: $spacing-2xl 0;
+  }
+}
+
+// ── Two-column grid ──────────────────────────────────────────
+// Figma: panel spans x0–678, list starts at x755 — a 77px gap (not the
+// panel-width/list-width remainder against the container, which is a
+// slightly different, looser number). A ~41:59 split. Grid items
+// stretch to the row's own height by default, so the panel naturally
+// matches the list's total height without hardcoding either.
+.launch-scale__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 41fr) minmax(0, 59fr);
+  gap: 7.7rem; // 77px
+
+  @include respond-below('narrow-desktop') {
+    gap: 5.8rem;
+  }
+
+  @include respond-below('lg') {
+    grid-template-columns: 1fr;
+    gap: $spacing-2xl;
+  }
+
+  @include respond-below('xs') {
+    gap: $spacing-xl;
+  }
+}
+
+// ── Left panel: dark card, always (both themes) ─────────────
+.launch-scale__panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6rem; // 60px
+  padding: 5rem; // 50px
+  border-radius: 4rem; // 40px
+  background-color: #000;
+
+  @include respond-below('narrow-desktop') {
+    gap: 4.5rem;
+    padding: 3.75rem;
+  }
+
+  @include respond-below('md') {
+    gap: 3.2rem;
+    padding: 3.2rem;
+    border-radius: 2.4rem;
+  }
+
+  @include respond-below('xs') {
+    gap: 2.4rem;
+    padding: 2.4rem;
+    border-radius: 2rem;
+  }
+}
+
+.launch-scale__panel-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  // Figma's own spec was 40% opacity plus a black gradient overlay on
+  // top of this, which read as too dark — no darkening at all now, the
+  // photo shows at full visibility.
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.launch-scale__panel-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; // 20px
+}
+
+.launch-scale__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: $font-family-heading;
+  font-weight: $font-weight-semibold;
+  font-size: 1.6rem; // 16px
+  letter-spacing: -0.08rem; // -0.8px
+  text-transform: uppercase;
+  color: #fff;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  @include respond-below('narrow-desktop') {
+    font-size: 1.4rem;
+  }
+}
+
+.launch-scale__heading {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  // Figma: 60px, sized down to 5.5rem here — clamped for narrower
+  // screens like every other display heading in this project.
+  font-size: clamp(2.4rem, 4.5vw, 5.5rem);
+  line-height: 1.25;
+  color: #fff;
+  margin: 0;
+
+  // Global small-desktop size-down — see $bp-narrow-desktop.
+  @include respond-below('narrow-desktop') {
+    font-size: clamp(2.2rem, 4.5vw, 4.2rem);
+  }
+}
+
+.launch-scale__heading-muted {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.launch-scale__subtitle {
+  font-family: $font-family-base;
+  font-size: 1.6rem; // 16px
+  font-weight: $font-weight-medium;
+  line-height: 1.2;
+  color: #fff;
+  max-width: 56rem;
+  margin: 0;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 1.4rem;
+  }
+}
+
+// ── Right list: theme-reactive step cards ────────────────────
+.launch-scale__list {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem; // 30px
+
+  @include respond-below('narrow-desktop') {
+    gap: 2.2rem;
+  }
+
+  @include respond-below('xs') {
+    gap: 1.6rem;
+  }
+}
+
+.launch-scale__card {
+  display: flex;
+  align-items: center;
+  gap: 2rem; // 20px
+  padding: 2.4rem; // 24px
+  border-radius: 3rem; // 30px
+  background-color: var(--color-bg-card);
+  border: 2px solid var(--color-border);
+
+  // Figma: #1d1d1d fill, no border — neither existing dark token matches
+  // #1d1d1d exactly (closest, --color-bg-hover, is a different semantic
+  // role), so this is hardcoded the same way the header's solid dark bg
+  // already is elsewhere in this project.
+  [data-theme='dark'] & {
+    background-color: #1d1d1d;
+    border-color: transparent;
+  }
+
+  @include respond-below('narrow-desktop') {
+    padding: 1.8rem;
+    gap: 1.6rem;
+  }
+
+  @include respond-below('xs') {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    padding: 1.5rem;
+    gap: 1.2rem;
+    border-radius: 2rem;
+  }
+}
+
+.launch-scale__card-icon {
+  flex-shrink: 0;
+  width: 9.5rem; // 95px
+  height: 9.5rem;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  // The exported icons are plain black/white line art — inverting them
+  // in dark mode reads correctly without needing a second icon asset
+  // per theme.
+  [data-theme='dark'] & svg {
+    filter: invert(1);
+  }
+
+  @include respond-below('narrow-desktop') {
+    width: 7rem;
+    height: 7rem;
+  }
+
+  @include respond-below('xs') {
+    width: 6rem;
+    height: 6rem;
+  }
+}
+
+.launch-scale__card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.launch-scale__card-title {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-bold;
+  font-size: 3.2rem; // 32px
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  margin: 0;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 2.4rem;
+  }
+
+  // A further step down at $bp-desktop-sm — also covers the old 'xs'
+  // tier below it (same 2rem value), so that separate rule is folded in
+  // here instead of repeating it.
+  @include respond-below('desktop-sm') {
+    font-size: 2rem;
+  }
+}
+
+.launch-scale__card-desc {
+  font-family: $font-family-base;
+  font-size: 1.6rem; // 16px
+  font-weight: $font-weight-medium;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+  margin: 0;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 1.4rem;
+  }
+}

@@ -127,7 +127,11 @@ body .container {
     padding: 0 2rem;
 
     @media (max-width: 1679px) {
-      max-width: 134rem;
+      max-width: 146rem;
+    }
+
+    @media (max-width: 1539px) {
+      max-width: 136rem;
     }
   }
 

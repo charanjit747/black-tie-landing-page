@@ -101,6 +101,12 @@ $bp-lg:  992px;
 $bp-xl:  1200px;
 $bp-2xl: 1400px;
 
+// Hover/cursor-driven interactions (e.g. How It Works' popout preview)
+// only make sense with real desk space — below this they're switched off
+// entirely for a plain, always-visible layout instead of a cramped,
+// half-working hover effect.
+$bp-desktop-sm: 1280px;
+
 // The master "small desktop" threshold: 1679px and below. Elements keep
 // their real/default size (matching Figma) above this; below it, global
 // size-down rules kick in so the same layout still fits on narrower

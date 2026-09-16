@@ -1,0 +1,177 @@
+// ============================================================
+// _stats.scss — Trust bar (10+ Asset Offerings / $5M+ Target Asset
+// Value / 100% KYC/KYB Verified Participation / 03 Supported Asset
+// Classes)
+//
+// A single rounded card, near full-bleed (Figma: 1880px wide inside a
+// 1920px canvas — a 20px gutter each side, wider than the site's normal
+// $container-max-width), with a soft blurred glow behind the numbers.
+// The glow is a pre-rendered, already-blurred export straight out of
+// Figma (not a live CSS filter: blur — that's expensive to keep
+// painting and this never needs to change size/shape), swapped per
+// theme in pure CSS so only the active theme's image is ever requested,
+// unlike two stacked <Image> elements which would both load.
+//
+// Layout: a single row of 4 down to $bp-lg, where it switches to a 2-up
+// grid (mirroring .dashboard-showcase-style responsive card grids
+// elsewhere in this project) down to $bp-sm, then a single column.
+// ============================================================
+
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.stats {
+  padding: 0;
+}
+
+// Wider than the standard .container — see file header. Its own side
+// padding (not a max-width cap) is what keeps it near full-bleed at
+// every viewport width instead of just capping out early.
+.stats__wrap {
+  padding: 0 2rem;
+
+  @include respond-below('sm') {
+    padding: 0 $spacing-md;
+  }
+}
+
+.stats__card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3rem;
+  background-color: var(--color-bg-hover); // Figma-confirmed pair: #f2f2f2 light / #1d1d1d dark — see _theme.scss
+
+  @include respond-below('lg') {
+    border-radius: 2rem;
+  }
+}
+
+// The pre-blurred glow export — see file header. Sized/positioned to
+// match its Figma source frame (1394 × 414, i.e. the full card height)
+// so it always covers the card without needing to be re-blurred or
+// re-cropped at any breakpoint.
+.stats__glow {
+  position: absolute;
+  inset: 0;
+  background-image: url('/assets/stats/glow-light.jpg');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+
+  [data-theme='dark'] & {
+    background-image: url('/assets/stats/glow-dark.jpg');
+  }
+}
+
+.stats__row {
+  position: relative; // sits above .stats__glow
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  max-width: 175rem;
+  margin: 0 auto;
+  padding: 10rem 0;
+
+  @include respond-below('narrow-desktop') {
+    padding: 6rem 0;
+  }
+
+  @include respond-below('desktop-sm') {
+    padding: 5rem 0;
+  }
+
+  @include respond-below('lg') {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: $spacing-lg;
+    row-gap: $spacing-2xl;
+    padding: 4rem 0;
+  }
+
+  @include respond-below('sm') {
+    grid-template-columns: 1fr;
+    padding: $spacing-xl 0;
+  }
+}
+
+.stats__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 8rem;
+
+  @include respond-below('narrow-desktop') {
+    padding: 0 4rem;
+  }
+
+  @include respond-below('desktop-sm') {
+    padding: 0 2rem;
+  }
+
+  @include respond-below('lg') {
+    padding: 0 1.6rem;
+  }
+}
+
+.stats__number {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-medium;
+  font-size: 12.4rem; // 124px
+  line-height: 1.2;
+  letter-spacing: -0.05em; // Figma: -6.2px at 124px = -0.05em, scales with font-size
+  color: #000; // pure black in light theme (Figma: text-black, not --color-text-primary's #0a0a0a)
+  margin: 0;
+
+  [data-theme='dark'] & {
+    color: #efefef; // Figma one-off — doesn't match --color-text-primary's #f9fafb
+  }
+
+  @include respond-below('narrow-desktop') {
+    font-size: 9.2rem;
+  }
+
+  @include respond-below('desktop-sm') {
+    font-size: 6rem;
+  }
+
+  // Explicit ask: 2.6rem at max-width 991px — coincides with the
+  // row → 2-up grid switch above.
+  @include respond-below('lg') {
+    font-size: 2.6rem;
+  }
+
+  @include respond-below('xs') {
+    font-size: 2.2rem;
+  }
+}
+
+.stats__label {
+  font-family: $font-family-base;
+  font-weight: $font-weight-medium;
+  font-size: 2.4rem; // 24px
+  line-height: 1.2;
+  color: #000; // matches .stats__number in light theme — Figma has no separate muted color there
+
+  [data-theme='dark'] & {
+    color: #afafaf; // Figma one-off muted gray — dark theme only
+  }
+
+  margin: 0;
+
+  @include respond-below('narrow-desktop') {
+    font-size: 1.8rem;
+  }
+
+  @include respond-below('desktop-sm') {
+    font-size: 1.6rem;
+  }
+
+  @include respond-below('lg') {
+    font-size: 1.3rem;
+  }
+
+  @include respond-below('xs') {
+    font-size: 1.2rem;
+  }
+}
