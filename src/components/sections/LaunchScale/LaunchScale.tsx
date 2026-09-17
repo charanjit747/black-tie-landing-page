@@ -76,6 +76,8 @@ export const LaunchScale: React.FC = () => {
           <div className="launch-scale__panel" ref={panelRef}>
             <div className="launch-scale__panel-bg">
               <Image
+                // TEMPORARY: local — launch-scale/ 403s on the CDN
+                // (S3 AccessDenied) as of this migration pass.
                 src="/assets/launch-scale/bg-graphic.jpg"
                 alt=""
                 fill

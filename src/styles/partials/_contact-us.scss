@@ -135,13 +135,13 @@
   width: 100%;
   max-width: 78.1rem;
   aspect-ratio: 781 / 721;
-  background-image: url('/assets/contact-us/globe-light.png');
+  background-image: url('#{$cdn-base}/contact-us/globe-light.png');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
 
   [data-theme='dark'] & {
-    background-image: url('/assets/contact-us/globe-dark.png');
+    background-image: url('#{$cdn-base}/contact-us/globe-dark.png');
   }
 
   @include respond-below('xl') {

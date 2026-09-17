@@ -88,6 +88,13 @@
 // separate children carrying their own background, so the override
 // has to target those directly rather than the outer `--primary`
 // class, which has no visible effect in this mode.
+// The GSAP-animated wrapper around the CTA (CommonButton doesn't
+// forward a ref) is now the direct flex child of .ecosystem__header —
+// it needs the same flex-shrink: 0 the button itself relied on before.
+.ecosystem__cta-wrap {
+  flex-shrink: 0;
+}
+
 .ecosystem__cta.btn-common--attached {
   flex-shrink: 0;
 

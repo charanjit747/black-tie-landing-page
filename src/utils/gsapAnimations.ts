@@ -14,6 +14,21 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(SplitText, ScrollTrigger);
 
+// A one-time scroll-triggered reveal (ScrollTrigger's default
+// toggleActions, or an explicit `once: true`) fires immediately at
+// creation if the trigger's `start` condition is already satisfied —
+// which happens whenever the page mounts already scrolled past it
+// (a reload mid-page, a back/forward restore, a deep link). That reads
+// as the animation firing "for no reason" on load instead of in
+// response to an actual scroll. Callers check this BEFORE creating
+// their ScrollTrigger and, if already past the threshold, jump straight
+// to the settled end-state with gsap.set() instead.
+function isAboveEntranceThreshold(el: HTMLElement, viewportFraction: number): boolean {
+  if (typeof window === 'undefined') return false;
+  const rect = el.getBoundingClientRect();
+  return rect.top <= window.innerHeight * viewportFraction;
+}
+
 // ────────────────────────────────────────────────────────────
 // Hero Section
 // Masked word-by-word reveal for the two headline lines (via SplitText),
@@ -30,7 +45,16 @@ export function initHeroAnimation({ scope, line1, line2 }: HeroAnimationRefs): (
   let splitLine1: SplitText | undefined;
   let splitLine2: SplitText | undefined;
 
-  const ctx = gsap.context(() => {
+  // Desktop-only, same 1280px threshold as every other animation in
+  // this file (see initDashboardShowcaseAnimation's own note) — no
+  // SplitText/timeline/tween is created at all below it, and nothing
+  // else here relies on GSAP to become visible in the first place
+  // (.hero__tag/__cta/__ticker have no CSS opacity:0 of their own), so
+  // skipping this entirely still leaves the hero fully visible, just
+  // without the entrance motion.
+  const mm = gsap.matchMedia();
+
+  mm.add('(min-width: 1280px)', () => {
     // Masked word-by-word reveal for the headline — each word rides in
     // its own overflow-hidden mask so it looks like it's wiping up into
     // place rather than just fading, then the rest of the hero follows.
@@ -66,99 +90,22 @@ export function initHeroAnimation({ scope, line1, line2 }: HeroAnimationRefs): (
         { opacity: 1, duration: 0.6 },
         '-=0.3'
       );
-  }, scope);
 
-  return () => {
-    ctx.revert();
-    splitLine1?.revert();
-    splitLine2?.revert();
-  };
+    return () => {
+      splitLine1?.revert();
+      splitLine2?.revert();
+    };
+  }, scope); // scope arg: `.hero__tag` etc. resolve within this element only
+
+  return () => mm.revert();
 }
 
 // ────────────────────────────────────────────────────────────
 // Header — Mobile Menu
-// Background split into 4 strips that extend left→right with a small
-// stagger, then the nav links slide in from the left one by one.
+// No longer GSAP — the open/close reveal (background strips, close
+// button, nav links, actions) is now plain CSS transitions driven by a
+// single class toggle. See MobileMenu.tsx and _mobile-menu.scss.
 // ────────────────────────────────────────────────────────────
-
-interface MobileMenuAnimationRefs {
-  overlay: HTMLElement;
-  strips: Array<HTMLElement | null>;
-  closeButton: HTMLElement | null;
-  links: Array<HTMLElement | null>;
-}
-
-export function createMobileMenuTimeline({
-  overlay,
-  strips,
-  closeButton,
-  links,
-}: MobileMenuAnimationRefs): { timeline: gsap.core.Timeline; destroy: () => void } {
-  let tl!: gsap.core.Timeline;
-
-  const ctx = gsap.context(() => {
-    tl = gsap.timeline({ paused: true })
-      .set(overlay, { display: 'flex', autoAlpha: 1 })
-      .fromTo(
-        strips.filter(Boolean),
-        { scaleX: 0, autoAlpha: 0 },
-        {
-          scaleX: 1,
-          autoAlpha: 1,
-          duration: 0.26,
-          stagger: 0.08, // one by one, small gap — not all at once
-          ease: 'power2.out',
-        },
-        'start'
-      )
-      // Top→bottom version — kept here in case left→right doesn't work
-      // out; swap this back in and flip transform-origin in
-      // _mobile-menu.scss back to `top center` to restore it.
-      // .fromTo(
-      //   strips.filter(Boolean),
-      //   { scaleY: 0, autoAlpha: 0 },
-      //   {
-      //     scaleY: 1,
-      //     autoAlpha: 1,
-      //     duration: 0.26,
-      //     stagger: 0.08,
-      //     ease: 'power2.out',
-      //   },
-      //   'start'
-      // )
-      .fromTo(
-        closeButton,
-        { autoAlpha: 0 },
-        { autoAlpha: 1, duration: 0.15 },
-        'start+=0.06'
-      )
-      .fromTo(
-        links.filter(Boolean),
-        { x: -30, autoAlpha: 0 },
-        {
-          x: 0,
-          autoAlpha: 1,
-          duration: 0.3,
-          stagger: 0.08,
-          ease: 'back.out(1)',
-        },
-        // Later than before — the strips now stagger too (4 × 0.08s
-        // apart), so they land later than they used to.
-        'start+=0.4'
-      )
-      .fromTo(
-        '.mobile-menu__actions',
-        { autoAlpha: 0, y: 20 },
-        { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out' }
-      );
-
-    tl.eventCallback('onReverseComplete', () => {
-      gsap.set(overlay, { display: 'none' });
-    });
-  }, overlay);
-
-  return { timeline: tl, destroy: () => ctx.revert() };
-}
 
 // ────────────────────────────────────────────────────────────
 // How It Works? For Investors
@@ -180,10 +127,18 @@ export function createMobileMenuTimeline({
 export interface HowItWorksInteraction {
   /** Move the big preview toward a point relative to .how-it-works__list. */
   moveTo: (x: number, y: number) => void;
-  /** Reveal the preview + dim this row's own thumbnail/brighten its text. */
-  activate: (row: HTMLElement) => void;
-  /** Hide the preview + restore this row's thumbnail/text. */
-  deactivate: (row: HTMLElement) => void;
+  /**
+   * Reveal the shared floating preview itself. Called only on entering
+   * the *list* as a whole (see HowItWorks.tsx), never per-row — see the
+   * note above showPreview/hidePreview below for why.
+   */
+  showPreview: () => void;
+  /** Hide the shared floating preview itself — only on leaving the list. */
+  hidePreview: () => void;
+  /** Dim this row's own thumbnail/brighten its text/reveal its description. */
+  activateRow: (row: HTMLElement) => void;
+  /** Restore this row's own thumbnail/text/description. */
+  deactivateRow: (row: HTMLElement) => void;
   /** Kill any in-flight tweens (call on unmount). */
   destroy: () => void;
 }
@@ -207,9 +162,32 @@ export function createHowItWorksInteraction(preview: HTMLElement): HowItWorksInt
     yTo(y);
   };
 
-  const activate = (row: HTMLElement) => {
+  // showPreview/hidePreview own the shared preview's autoAlpha/scale —
+  // and ONLY these two functions do. They used to be folded into
+  // activate/deactivate (fired once per row on every mouseenter/
+  // mouseleave), which meant switching from one row straight to an
+  // adjacent one fired a hide *and* a show on the very same element
+  // back to back. Fast, continuous hovering across several rows queued
+  // up many of these alternating tweens on the same autoAlpha/scale
+  // properties in quick succession, and depending on exactly which pair
+  // of calls landed last, the preview could settle stuck at full
+  // opacity with no further row/mouse event left to correct it — the
+  // reported "gets stuck" bug reproduced with no scrolling involved at
+  // all. Splitting it so the preview's own visibility responds only to
+  // entering/leaving the *list* (a single, simple on/off — see
+  // HowItWorks.tsx's handleMouseEnter/handleListMouseLeave) removes that
+  // race entirely: switching rows now only ever touches each row's own
+  // thumb/text/desc (activateRow/deactivateRow below), never re-fires a
+  // competing tween on the shared preview itself.
+  const showPreview = () => {
     gsap.to(preview, { autoAlpha: 1, scale: 1, duration: 0.5, ease: 'power3.out' });
+  };
 
+  const hidePreview = () => {
+    gsap.to(preview, { autoAlpha: 0, scale: 0.85, duration: 0.35, ease: 'power2.inOut' });
+  };
+
+  const activateRow = (row: HTMLElement) => {
     const thumb = row.querySelector<HTMLElement>('.how-it-works__row-thumb');
     const text = row.querySelector<HTMLElement>('.how-it-works__row-text');
     const desc = row.querySelector<HTMLElement>('.how-it-works__row-desc');
@@ -231,9 +209,7 @@ export function createHowItWorksInteraction(preview: HTMLElement): HowItWorksInt
     }
   };
 
-  const deactivate = (row: HTMLElement) => {
-    gsap.to(preview, { autoAlpha: 0, scale: 0.85, duration: 0.35, ease: 'power2.inOut' });
-
+  const deactivateRow = (row: HTMLElement) => {
     const thumb = row.querySelector<HTMLElement>('.how-it-works__row-thumb');
     const text = row.querySelector<HTMLElement>('.how-it-works__row-text');
     const desc = row.querySelector<HTMLElement>('.how-it-works__row-desc');
@@ -256,7 +232,7 @@ export function createHowItWorksInteraction(preview: HTMLElement): HowItWorksInt
     gsap.killTweensOf(preview);
   };
 
-  return { moveTo, activate, deactivate, destroy };
+  return { moveTo, showPreview, hidePreview, activateRow, deactivateRow, destroy };
 }
 
 // ────────────────────────────────────────────────────────────
@@ -320,114 +296,142 @@ export function initLaunchScaleAnimation({
   panel,
   cards,
 }: LaunchScaleAnimationRefs): () => void {
-  const ctx = gsap.context(() => {
-    gsap.set(panel, { autoAlpha: 0, x: -40 });
-    gsap.set(cards, { autoAlpha: 0, y: 28 });
+  // Desktop-only, same 1280px threshold as every other animation in
+  // this file — no gsap.set/timeline/ScrollTrigger at all below it.
+  const mm = gsap.matchMedia();
 
-    gsap
-      .timeline({
-        defaults: { ease: 'power3.out' },
-        scrollTrigger: {
-          trigger: section,
-          start: 'top 75%',
-        },
-      })
-      .to(panel, { autoAlpha: 1, x: 0, duration: 0.7 })
-      .to(cards, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12 }, '-=0.4');
-  }, section);
+  mm.add(
+    '(min-width: 1280px)',
+    () => {
+      if (isAboveEntranceThreshold(section, 0.75)) {
+        gsap.set(panel, { autoAlpha: 1, x: 0 });
+        gsap.set(cards, { autoAlpha: 1, y: 0 });
+        return;
+      }
 
-  return () => ctx.revert();
+      gsap.set(panel, { autoAlpha: 0, x: -40 });
+      gsap.set(cards, { autoAlpha: 0, y: 28 });
+
+      gsap
+        .timeline({
+          defaults: { ease: 'power3.out' },
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 75%',
+          },
+        })
+        .to(panel, { autoAlpha: 1, x: 0, duration: 0.7 })
+        .to(cards, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12 }, '-=0.4');
+    },
+    section
+  );
+
+  return () => mm.revert();
 }
 
 // ────────────────────────────────────────────────────────────
 // Dashboard Showcase (Dashboard / BTX Markets / Investment Orders /
 // Payment Screen)
-// GSAP pins the right column (a full-viewport-height wrapper,
-// flex-centered — see .dashboard-showcase__media) starting when the
-// list reaches the top of the viewport, ending exactly when the LAST
-// heading reaches the vertical center of the viewport — tied directly
-// to that heading via `endTrigger`/`end: 'center center'` rather than
-// an approximated scroll distance, so the section only becomes
-// scrollable again once the last slide is genuinely centered against
-// the image.
+// No sticky/pinned column and no crossfade between stacked images —
+// the section just scrolls normally, same two-column design as before
+// (heading left, its own screenshot right, one row per step). Each
+// card instead plays its own one-time 3D tilt as it scrolls into view —
+// same entrance technique used by
+// https://agntix-next.vercel.app/creative-agency's "OUR RECENT
+// PROJECTS" thumbnails (confirmed directly against that site's own
+// computed styles), tuned to this section's own needs rather than
+// copied 1:1 (see the two notes below).
 //
-// Crossfade: onEnter/onEnterBack (each heading reactivating itself,
-// once per line, in either direction) is enough — the very next
-// heading's own onEnter already covers "the next one arriving", so
-// mirroring that with onLeave/onLeaveBack on THIS heading would
-// double-fire the crossfade at two different scroll positions.
+// The animated element is the WHOLE card — the gradient border frame
+// (.dashboard-showcase__item-image-card in _dashboard-showcase.scss),
+// not just the cropped image inside it — so the frame tilts along with
+// the screenshot as one rigid piece rather than staying static while
+// the image moves inside it.
 //
-// The start/end lines deliberately use DIFFERENT edges of the heading,
-// not the same one twice — that's what makes the two directions feel
-// identical instead of the "top" edge case, where a short heading is
-// already fully visible well before its top reaches the 20% line
-// (a ~20%-of-viewport lag), while going down a heading's top reaching
-// 80% roughly coincides with it just becoming fully visible (near-zero
-// lag). Using the BOTTOM edge for the top exit line mirrors that same
-// near-zero lag: start 'top 80%' (top edge crossing the bottom 20%) for
-// entering from below, end 'bottom 20%' (bottom edge crossing the top
-// 20%) for entering from above.
-// Desktop-only — wrapped in gsap.matchMedia() (the current,
-// non-deprecated API — ScrollTrigger.matchMedia() still exists but
-// GSAP's own docs mark it deprecated in favor of this) so it's fully
-// created/torn down exactly at the $bp-desktop-sm breakpoint, including
-// on a live resize across it, rather than a one-time check at mount.
+// Both rotation and z return to EXACTLY their identity values (0, 0) —
+// not the reference site's own permanent slight resting tilt/offset —
+// once the card's own center reaches the viewport's center: full size,
+// no tilt, reading exactly like a normal image at rest, same as before
+// any of this tilt work started. A residual z left over at rest (an
+// earlier iteration of this same feature) permanently shrank the card
+// by roughly 15% once paired with the much closer, more dramatic 80px
+// perspective now in use (see .dashboard-showcase__item-image) — scale
+// = perspective / (perspective + |z|) — leaving a visible gap on the
+// right of its column instead of filling it like it used to. z still
+// genuinely DIPS well before recovering (keyframed, not a straight
+// line from 0 to 0) — with no z motion at all, rotation alone just
+// reads as a flat card flipping in place, not real 3D depth easing
+// into the page. `end: 'center center'` ties "settled" to the card's
+// own center crossing the viewport's center, rather than an arbitrary
+// scroll distance. `scrub: 1` ties it to scroll position with a touch
+// of smoothing rather than a fixed duration, so it eases in with the
+// scroll itself and naturally reverses if the user scrolls back up.
+//
+// Perspective lives on each card's own wrapper
+// (.dashboard-showcase__item-image, one per grid cell) rather than a
+// `transformPerspective` baked into the card's own transform — it has
+// to live on an ANCESTOR of the rotated element to read as real depth,
+// and a per-card wrapper keeps each card's own vanishing point centered
+// on itself rather than shared across the whole grid. `overflow: hidden`
+// and the image inset (via padding, see _dashboard-showcase.scss) both
+// live on the card itself too, not a separate static child — a nested
+// clip context can compute inconsistently with an ancestor's own 3D
+// transform in some browsers' rendering paths, which is what was
+// causing the gradient-border reveal to look lopsided (wider on one
+// side) before this was consolidated onto one element.
 // ────────────────────────────────────────────────────────────
 
 interface DashboardShowcaseRefs {
-  list: HTMLElement;
-  media: HTMLElement;
-  headings: HTMLElement[];
-  images: HTMLElement[];
+  cards: HTMLElement[];
 }
 
-// Must stay in sync with $bp-desktop-sm in _variables.scss.
-const DASHBOARD_SHOWCASE_BREAKPOINT = 1280;
-
-export function initDashboardShowcaseAnimation({
-  list,
-  media,
-  headings,
-  images,
-}: DashboardShowcaseRefs): () => void {
+export function initDashboardShowcaseAnimation({ cards }: DashboardShowcaseRefs): () => void {
+  // Desktop-only, same threshold as the CSS side's $bp-desktop-sm
+  // (1280px, see _dashboard-showcase.scss) — below it the section goes
+  // back to its plain pre-animation 2-column layout with flat images,
+  // per request, rather than the tilt just looking cramped at a narrower
+  // width. gsap.matchMedia (not a one-off window.matchMedia check, see
+  // the same pattern in HowItWorks.tsx) creates the tweens only while
+  // the query matches and automatically reverts them if the viewport is
+  // resized back below it.
   const mm = gsap.matchMedia();
 
-  mm.add(`(min-width: ${DASHBOARD_SHOWCASE_BREAKPOINT}px)`, () => {
-    gsap.set(images, { autoAlpha: 0 });
-    gsap.set(images[0], { autoAlpha: 1 });
-
-    const crossfadeTo = (index: number) => {
-      images.forEach((img, i) => {
-        gsap.to(img, { autoAlpha: i === index ? 1 : 0, duration: 0.5, ease: 'power2.out' });
-      });
-    };
-
-    const pinTrigger = ScrollTrigger.create({
-      trigger: list,
-      start: 'top top',
-      endTrigger: headings[headings.length - 1],
-      end: 'center center',
-      pin: media,
-      pinSpacing: false,
+  mm.add('(min-width: 1280px)', () => {
+    cards.forEach((card) => {
+      // Values, trigger points, scrub, and immediateRender all pulled
+      // directly from the reference site's own production JS bundle
+      // (fetched and read verbatim, not inferred from computed styles)
+      // — its equivalent call is:
+      //   gsap.set(".studio-project-thumb", { perspective: 60 });
+      //   gsap.fromTo(".studio-project-thumb img",
+      //     { rotationX: 1.8, z: "0vh" },
+      //     { rotationX: -0.5, z: "-2vh", scrollTrigger: {
+      //         trigger: e, start: "top+=150px bottom", end: "bottom top",
+      //         immediateRender: false, scrub: 0.1 } });
+      // Two things earlier attempts at this got wrong: `end` is
+      // "bottom top", not "center center" — the tween runs for the
+      // card's entire time in the viewport, not just until it reaches
+      // center, so cutting it off at center left it barely underway.
+      // And the settle is a real, PERMANENT residual (-0.5deg/-2vh) —
+      // it never returns to flat/full-size; every earlier "should be
+      // flat at center" version was a deviation from how this actually
+      // works, not a fix.
+      gsap.fromTo(
+        card,
+        { rotationX: 1.8, z: '0vh' },
+        {
+          rotationX: -0.5,
+          z: '-2vh',
+          immediateRender: false,
+          scrollTrigger: {
+            trigger: card,
+            start: 'top+=150px bottom',
+            end: 'bottom top',
+            scrub: 0.1,
+          },
+        }
+      );
     });
-
-    const headingTriggers = headings.map((heading, index) =>
-      ScrollTrigger.create({
-        trigger: heading,
-        start: 'top 80%', // scrolling down: fires once the heading's top reaches the bottom 20% of the viewport
-        end: 'bottom 20%', // scrolling up: fires once the heading's bottom reaches the top 20% of the viewport
-        onEnter: () => crossfadeTo(index),
-        onEnterBack: () => crossfadeTo(index),
-      })
-    );
-
-    // matchMedia's own cleanup — runs when this query stops matching
-    // (including a live resize past the breakpoint), not just on
-    // unmount.
-    return () => {
-      pinTrigger.kill();
-      headingTriggers.forEach((trigger) => trigger.kill());
-    };
   });
 
   return () => mm.revert();
@@ -438,11 +442,12 @@ export function initDashboardShowcaseAnimation({
 // Verified Participation / Supported Asset Classes)
 // Each number counts up from 0 to its real value once the card scrolls
 // into view, then never repeats — `once: true` so re-scrolling past it
-// doesn't re-trigger the count. Runs at every breakpoint (no
-// gsap.matchMedia gate) since it isn't a hover/cursor interaction.
-// Writes straight to the DOM node's textContent via a plain tween proxy
-// object rather than piping the value through React state on every
-// tick — a 60fps count-up has no business re-rendering a component.
+// doesn't re-trigger the count. Desktop-only (1280px), like every other
+// animation in this file — below it the final value is just set
+// directly, no GSAP/ScrollTrigger involved at all. Writes straight to
+// the DOM node's textContent via a plain tween proxy object rather than
+// piping the value through React state on every tick — a 60fps
+// count-up has no business re-rendering a component.
 // ────────────────────────────────────────────────────────────
 
 interface StatsCounterItem {
@@ -457,6 +462,25 @@ interface StatsCounterRefs {
 }
 
 export function initStatsCounterAnimation({ section, items }: StatsCounterRefs): () => void {
+  // Desktop-only, same 1280px threshold as every other animation in
+  // this file — below it, jump straight to each stat's final value via
+  // plain textContent (no GSAP/ScrollTrigger call at all). The JSX
+  // renders `stat.format(0)` initially either way, so this is what
+  // actually shows the real number in both cases — it just isn't
+  // *counted up* to below 1280px, a plain window.matchMedia check
+  // (not gsap.matchMedia — this path must not touch the GSAP API) is
+  // enough since there's no need to react to a later resize here: the
+  // final value is already correct regardless of width.
+  const isDesktop =
+    typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches;
+
+  if (!isDesktop || isAboveEntranceThreshold(section, 0.8)) {
+    items.forEach((item) => {
+      item.el.textContent = item.format(item.value);
+    });
+    return () => {};
+  }
+
   const proxies = items.map(() => ({ value: 0 }));
 
   const trigger = ScrollTrigger.create({
@@ -496,17 +520,312 @@ export function initStatsCounterAnimation({ section, items }: StatsCounterRefs):
 const PARTNERS_MARQUEE_SPEED_PX_PER_SEC = 60;
 
 export function initPartnersMarqueeAnimation(track: HTMLElement): () => void {
-  // Duration derived from the track's actual width (half of it, since
-  // the track holds two copies) so the on-screen speed is constant
-  // regardless of how many logos there are or how wide the viewport is.
-  const duration = track.scrollWidth / 2 / PARTNERS_MARQUEE_SPEED_PX_PER_SEC;
+  // Desktop-only, same 1280px threshold as every other animation in
+  // this file — below it the track just sits still (first copy of the
+  // logo list visible, same as any other static row), no gsap.to at all.
+  const mm = gsap.matchMedia();
 
-  const tween = gsap.to(track, {
-    xPercent: -50,
-    duration,
-    ease: 'none',
-    repeat: -1,
+  mm.add('(min-width: 1280px)', () => {
+    // Duration derived from the track's actual width (half of it, since
+    // the track holds two copies) so the on-screen speed is constant
+    // regardless of how many logos there are or how wide the viewport is.
+    const duration = track.scrollWidth / 2 / PARTNERS_MARQUEE_SPEED_PX_PER_SEC;
+
+    gsap.to(track, {
+      xPercent: -50,
+      duration,
+      ease: 'none',
+      repeat: -1,
+    });
   });
 
-  return () => tween.kill();
+  return () => mm.revert();
+}
+
+// ────────────────────────────────────────────────────────────
+// Shared fade-up-in-sequence reveal, used by the several simpler
+// sections below (What We Do, Security, Ecosystem's title, FAQ, Join
+// Our Community, Contact Us) — each just fades/slides its own content
+// up once, in the order its groups are listed, rather than needing its
+// own bespoke timeline. A "group" is either one element or an array of
+// elements to stagger together (e.g. a row of cards).
+//
+// Guarded by isAboveEntranceThreshold the same way LaunchScale/Stats
+// are above: skips straight to the settled end-state instead of
+// replaying the entrance if the section is already in view when this
+// mounts (a mid-page reload, a deep link, a back/forward restore).
+// ────────────────────────────────────────────────────────────
+
+type RevealGroup = HTMLElement | Array<HTMLElement | null> | null;
+
+function createFadeUpReveal(
+  section: HTMLElement,
+  groups: RevealGroup[],
+  opts: { start?: string; y?: number } = {}
+): () => void {
+  const start = opts.start ?? 'top 75%';
+  const y = opts.y ?? 28;
+
+  const normalized = groups
+    .map((g) => (Array.isArray(g) ? g.filter((el): el is HTMLElement => !!el) : g ? [g] : []))
+    .filter((g) => g.length > 0);
+
+  // Desktop-only, same 1280px threshold as every other animation in
+  // this file — below it none of these sections get any gsap.set/
+  // timeline/ScrollTrigger call at all, and none of them rely on GSAP
+  // to become visible in the first place (no CSS opacity:0 default), so
+  // skipping this entirely still leaves each section fully visible,
+  // just without the scroll-in motion.
+  const mm = gsap.matchMedia();
+
+  mm.add(
+    '(min-width: 1280px)',
+    () => {
+      const allEls = normalized.flat();
+      if (allEls.length === 0) return;
+
+      if (isAboveEntranceThreshold(section, 0.75)) {
+        gsap.set(allEls, { autoAlpha: 1, y: 0 });
+        return;
+      }
+
+      gsap.set(allEls, { autoAlpha: 0, y });
+
+      const tl = gsap.timeline({
+        defaults: { ease: 'power3.out', duration: 0.7 },
+        scrollTrigger: { trigger: section, start },
+      });
+
+      normalized.forEach((group, i) => {
+        tl.to(
+          group,
+          { autoAlpha: 1, y: 0, stagger: group.length > 1 ? 0.12 : 0 },
+          i === 0 ? undefined : '-=0.35'
+        );
+      });
+    },
+    section
+  );
+
+  return () => mm.revert();
+}
+
+// ────────────────────────────────────────────────────────────
+// What We Do (Bringing Real-World Assets On-Chain)
+// Tag+heading fade up, then the three feature rows stagger up behind
+// them, then the CTA and the looping globe video settle in together.
+// ────────────────────────────────────────────────────────────
+
+interface WhatWeDoAnimationRefs {
+  section: HTMLElement;
+  intro: HTMLElement | null;
+  features: Array<HTMLElement | null>;
+  cta: HTMLElement | null;
+  visual: HTMLElement | null;
+}
+
+export function initWhatWeDoAnimation({
+  section,
+  intro,
+  features,
+  cta,
+  visual,
+}: WhatWeDoAnimationRefs): () => void {
+  return createFadeUpReveal(section, [intro, features, [cta, visual].filter(Boolean) as HTMLElement[]]);
+}
+
+// ────────────────────────────────────────────────────────────
+// Security and Compliance at Institutional Standards
+// Heading fades up, then the three compliance cards (Sumsub/Hashlock/
+// DocuSign) stagger up behind it.
+// ────────────────────────────────────────────────────────────
+
+interface SecurityAnimationRefs {
+  section: HTMLElement;
+  heading: HTMLElement | null;
+  cards: Array<HTMLElement | null>;
+}
+
+export function initSecurityAnimation({ section, heading, cards }: SecurityAnimationRefs): () => void {
+  return createFadeUpReveal(section, [heading, cards]);
+}
+
+// ────────────────────────────────────────────────────────────
+// Ecosystem title row (Black Tie Real-World Asset Infrastructure
+// Ecosystem) — just the heading/CTA row above the slider; the slider
+// itself already has its own continuous motion (autoplay) and isn't
+// touched here.
+// ────────────────────────────────────────────────────────────
+
+interface EcosystemTitleAnimationRefs {
+  section: HTMLElement;
+  heading: HTMLElement | null;
+  cta: HTMLElement | null;
+}
+
+export function initEcosystemTitleAnimation({
+  section,
+  heading,
+  cta,
+}: EcosystemTitleAnimationRefs): () => void {
+  return createFadeUpReveal(section, [heading, cta]);
+}
+
+// ────────────────────────────────────────────────────────────
+// FAQ (Frequently Asked Questions?)
+// Tag+heading fade up, then the FAQ items themselves stagger up behind
+// them (the accordion open/close motion is separate — plain CSS, see
+// _faq.scss — this only covers the one-time scroll-in reveal).
+// ────────────────────────────────────────────────────────────
+
+interface FAQAnimationRefs {
+  section: HTMLElement;
+  header: HTMLElement | null;
+  items: Array<HTMLElement | null>;
+}
+
+export function initFAQAnimation({ section, header, items }: FAQAnimationRefs): () => void {
+  return createFadeUpReveal(section, [header, items]);
+}
+
+// ────────────────────────────────────────────────────────────
+// Join Our Community (newsletter signup)
+// "Join Our Community" fades up first, then the "Where Real Assets
+// Meet Digital Markets" tagline + description settle in behind it,
+// then the email/subscribe form.
+// ────────────────────────────────────────────────────────────
+
+interface JoinCommunityAnimationRefs {
+  section: HTMLElement;
+  heading: HTMLElement | null;
+  subhead: HTMLElement | null;
+  form: HTMLElement | null;
+}
+
+export function initJoinCommunityAnimation({
+  section,
+  heading,
+  subhead,
+  form,
+}: JoinCommunityAnimationRefs): () => void {
+  return createFadeUpReveal(section, [heading, subhead, form]);
+}
+
+// ────────────────────────────────────────────────────────────
+// Contact Us ("Reach out via the contact form...")
+// Heading fades up first, then the two columns — the globe
+// illustration and the form — settle in together right behind it.
+// ────────────────────────────────────────────────────────────
+
+interface ContactUsAnimationRefs {
+  section: HTMLElement;
+  heading: HTMLElement | null;
+  globe: HTMLElement | null;
+  form: HTMLElement | null;
+}
+
+export function initContactUsAnimation({
+  section,
+  heading,
+  globe,
+  form,
+}: ContactUsAnimationRefs): () => void {
+  return createFadeUpReveal(section, [heading, [globe, form].filter(Boolean) as HTMLElement[]]);
+}
+
+// ────────────────────────────────────────────────────────────
+// Custom Cursor — premium ring + dot that trails the pointer, fading
+// out over clickable elements so the native pointer cursor shows
+// through instead (see .custom-cursor / body cursor rules in
+// _custom-cursor.scss).
+//
+// Gated the same way as every other effect in this file — desktop-only,
+// min-width: 1280px — plus (hover: hover) and (pointer: fine) so a
+// touch device never gets a cursor it can't see. Below that combined
+// query, this makes zero gsap.* calls and adds zero listeners, same
+// "no GSAP below 1280px" rule the rest of the site follows.
+// ────────────────────────────────────────────────────────────
+
+const CURSOR_CLICKABLE_SELECTOR =
+  'a, button, input, textarea, select, label, [role="button"], .btn-common';
+
+export function initCustomCursorAnimation(ring: HTMLElement, dot: HTMLElement): () => void {
+  const mm = gsap.matchMedia();
+
+  mm.add('(min-width: 1280px) and (hover: hover) and (pointer: fine)', () => {
+    gsap.set([ring, dot], { xPercent: -50, yPercent: -50 });
+
+    // The ring trails with a soft lag; the dot follows almost instantly
+    // right on top of the real pointer position — the combination is
+    // what reads as a deliberate, premium cursor rather than a plain
+    // 1:1 swap-in replacement.
+    const ringX = gsap.quickTo(ring, 'x', { duration: 0.45, ease: 'power3' });
+    const ringY = gsap.quickTo(ring, 'y', { duration: 0.45, ease: 'power3' });
+    const dotX = gsap.quickTo(dot, 'x', { duration: 0.12, ease: 'power3' });
+    const dotY = gsap.quickTo(dot, 'y', { duration: 0.12, ease: 'power3' });
+
+    let isVisible = false;
+    let isOverClickable = false;
+
+    const handleMove = (e: MouseEvent) => {
+      ringX(e.clientX);
+      ringY(e.clientY);
+      dotX(e.clientX);
+      dotY(e.clientY);
+
+      // First movement reveals the cursor — avoids a flash at (0, 0)
+      // before any real coordinate has arrived.
+      if (!isVisible) {
+        isVisible = true;
+        gsap.to(dot, { autoAlpha: 1, duration: 0.25, ease: 'power2.out' });
+        if (!isOverClickable) {
+          gsap.to(ring, { autoAlpha: 1, duration: 0.25, ease: 'power2.out' });
+        }
+      }
+    };
+
+    // Delegated on the document root instead of per-element listeners —
+    // this project's DOM adds/removes plenty of nodes on scroll/hover
+    // interactions elsewhere, and a delegated pair here needs no
+    // re-binding when that happens.
+    const handleOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest(CURSOR_CLICKABLE_SELECTOR)) {
+        isOverClickable = true;
+        gsap.to(ring, { autoAlpha: 0, duration: 0.25, ease: 'power2.out' });
+      }
+    };
+
+    const handleOut = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest(CURSOR_CLICKABLE_SELECTOR)) {
+        isOverClickable = false;
+        if (isVisible) {
+          gsap.to(ring, { autoAlpha: 1, duration: 0.25, ease: 'power2.out' });
+        }
+      }
+    };
+
+    // Hide entirely when the pointer leaves the viewport (e.g. off the
+    // top into the browser chrome) so a stray ring/dot never gets left
+    // sitting at the last known edge position.
+    const handleLeaveWindow = () => {
+      isVisible = false;
+      gsap.to([ring, dot], { autoAlpha: 0, duration: 0.2, ease: 'power2.out' });
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseover', handleOver);
+    window.addEventListener('mouseout', handleOut);
+    document.documentElement.addEventListener('mouseleave', handleLeaveWindow);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseover', handleOver);
+      window.removeEventListener('mouseout', handleOut);
+      document.documentElement.removeEventListener('mouseleave', handleLeaveWindow);
+    };
+  });
+
+  return () => mm.revert();
 }

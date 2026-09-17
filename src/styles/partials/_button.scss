@@ -33,55 +33,6 @@
   @include smooth-transition(all, $transition-base);
   @include focus-ring();
 
-  // ── Standard look: a rounded arrow badge on each side ──────
-  // Every default CommonButton (not just ones with an explicit icon prop)
-  // gets the same small rounded-circle arrow badge flanking its label —
-  // left one hidden at rest, right one visible. On hover they swap
-  // prominence (left "zooms in", right "zooms out" at the same time) so
-  // it reads as a quick pop rather than anything sliding around. The
-  // label itself never moves.
-  &__text {
-    display: inline-flex;
-    align-items: center;
-  }
-
-  .btn-icon-pop {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.8rem;  // 28px rounded badge (1rem = 10px)
-    height: 2.8rem;
-    flex-shrink: 0;
-    border: 1.5px solid currentColor;
-    border-radius: 9999px;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
-
-    svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    &--left {
-      transform: scale(0);
-      opacity: 0;
-    }
-
-    &--right {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  &:hover .btn-icon-pop--left {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  &:hover .btn-icon-pop--right {
-    transform: scale(0);
-    opacity: 0;
-  }
-
   // ── Ripple effect ────────────────────────────────────────
   &::after {
     content: '';
@@ -148,15 +99,17 @@
   }
 
   // ── Attached icon-cap (Figma "Get Started" CTA) ───────────
-  // Circle is the SAME height as the label (both exactly 50px, per
-  // Figma's literal spec) and sits flush next to it — no vertical bulge,
-  // no horizontal overlap into the label's box. The outer element is an
-  // invisible hit-box only: the label pill and the icon circle are two
-  // independently-shaped, independently-colored children. Still one
-  // single clickable element — the two "pieces" are purely visual.
+  // Circle is the SAME height as the label and sits flush next to it —
+  // no vertical bulge, no horizontal overlap into the label's box. The
+  // outer element is an invisible hit-box only: the label pill and the
+  // icon circle are two independently-shaped, independently-colored
+  // children. Still one single clickable element — the two "pieces" are
+  // purely visual.
   &--attached {
-    --cta-label-h: 50px;
-    --cta-circle-d: 50px;
+    // Figma spec: 5rem (50px) at full size, 44px at $bp-narrow-desktop —
+    // matches &--lg's own height exactly.
+    --cta-label-h: 5rem;
+    --cta-circle-d: 5rem;
 
     // Same global small-desktop size-down as the rest of --lg.
     @include respond-below('narrow-desktop') {
@@ -167,6 +120,18 @@
     position: relative;
     background: transparent !important;
     border-color: transparent !important;
+    // The real clipping culprit: &--primary/&--secondary/&--light all set
+    // a real `border: 1.5px solid ...`. `border-color: transparent` above
+    // only hides it visually — with box-sizing: border-box, that 1.5px
+    // (top + bottom = 3px total) still eats into this element's *content*
+    // box, while __label/__icon-cap are sized to the full --cta-circle-d.
+    // The children then overflowed the shrunk content area by exactly
+    // that amount and got clipped by `overflow: hidden` below — a fixed
+    // ~1.5px-per-edge cut that stayed the same no matter how much
+    // --cta-circle-d was inflated, since it scales both in lockstep.
+    // Zeroing the border outright (this wrapper is fully invisible
+    // anyway) removes the content-vs-border-box mismatch entirely.
+    border-width: 0 !important;
     box-shadow: none !important;
     padding: 0;
     padding-right: var(--cta-circle-d); // full diameter reserved — the
@@ -174,7 +139,7 @@
                                          // space, touching but not
                                          // overlapping the label at rest
     gap: 0;
-    min-height: var(--cta-circle-d);
+    height: var(--cta-circle-d); // matches __label/__icon-cap exactly
     border-radius: 0;
     // overflow: hidden is inherited from the base rule above — label and
     // height now match exactly, so it's safe, and it's what clips the

@@ -41,10 +41,22 @@
   align-items: center;
   gap: 6rem;
   text-align: center;
+  width: 100%;
 
   @include respond-below('lg') {
     gap: $spacing-2xl;
   }
+}
+
+// The GSAP-animated wrapper around the form (added only so it has its
+// own ref/target — .join-community__form itself already sets its
+// width: 100%). .join-community__inner's align-items: center means a
+// plain block child shrinks to fit its own content instead of
+// stretching to the row's full width, which left that inner 100% an
+// ambiguous/collapsed reference — the pill and button no longer had
+// room to sit side by side and wrapped onto two lines.
+.join-community__form-wrap {
+  width: 100%;
 }
 
 .join-community__heading {

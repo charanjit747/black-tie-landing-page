@@ -156,6 +156,24 @@
   display: flex;
   width: max-content;
   will-change: transform;
+
+  // GSAP (initPartnersMarqueeAnimation) is gated to min-width:1280px —
+  // below it, no gsap.to ever runs, so the track would otherwise just
+  // sit still. This plain CSS keyframe loop takes over there instead,
+  // keeping the marquee scrolling exactly as before with no GSAP
+  // involvement below the threshold.
+  @include respond-below('desktop-sm') {
+    animation: partners-marquee 26s linear infinite;
+  }
+}
+
+@keyframes partners-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .partners__set {

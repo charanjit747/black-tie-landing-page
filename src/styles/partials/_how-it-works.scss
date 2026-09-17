@@ -159,6 +159,14 @@
   }
 }
 
+// Same hard CSS backstop as .how-it-works__preview below — forces this
+// invisible off the browser's own native :hover the instant the cursor
+// isn't over the list, regardless of whatever state the JS/GSAP side
+// left its inline opacity in.
+.how-it-works__list:not(:hover) .how-it-works__hover-stripe {
+  opacity: 0 !important;
+}
+
 .how-it-works__row {
   position: relative; // stacks above .how-it-works__hover-stripe
   z-index: 1;
@@ -393,7 +401,12 @@
   }
   overflow: hidden;
   pointer-events: none;
-  z-index: $z-tooltip;
+  // $z-tooltip (600) sits ABOVE $z-sticky (200, the fixed header) — the
+  // popout was floating over the header on rows near the top of the
+  // list. It only ever needs to clear this section's own rows (z-index
+  // 1 on .how-it-works__row), so $z-raised (10) is plenty and stays
+  // safely under the header.
+  z-index: $z-raised;
   opacity: 0; // matches the GSAP-set initial state as a no-JS fallback
   box-shadow: var(--shadow-dropdown);
   // Figma: no border in Home-Light, a ~3.6px --color-border frame in
@@ -408,6 +421,18 @@
   @include respond-below('desktop-sm') {
     display: none;
   }
+}
+
+// Hard CSS backstop, independent of the JS/GSAP show-hide logic above:
+// whatever state a fast/edge-case hover sequence left the GSAP-driven
+// inline opacity/visibility in, the browser's own :hover (updated
+// natively every frame, not through any of our own event/rAF bookkeeping)
+// forces this fully invisible the instant the cursor isn't actually over
+// the list at all. This can only ever hide it *harder* than the JS state
+// already wants — it never fights a genuine, currently-hovered show.
+.how-it-works__list:not(:hover) .how-it-works__preview {
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 .how-it-works__preview-img {

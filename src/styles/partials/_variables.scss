@@ -135,3 +135,11 @@ $z-overlay: 300;
 $z-modal:   400;
 $z-toast:   500;
 $z-tooltip: 600;
+
+// ── CDN ──────────────────────────────────────────────────────
+// SCSS-side counterpart to ASSETS_BASE_URL in src/constants/cdn.ts —
+// every static asset previously at public/assets/<folder>/<file> now
+// lives at this same path under the CDN instead (folders uploaded with
+// identical names/structure). No trailing slash: every url() below
+// appends its own leading "/".
+$cdn-base: 'https://d354qrbjihw1mn.cloudfront.net/landingPageAssets';

@@ -25,7 +25,7 @@
 .site-footer {
   padding-top: 12rem;
 
-  @include respond-below('lg') {
+  @include respond-below('desktop-sm') {
     padding-top: $spacing-3xl;
   }
 }
@@ -43,7 +43,13 @@
     border-bottom-color: rgba(233, 233, 233, 0.2);
   }
 
-  @include respond-below('lg') {
+  // Below 1280px (see $bp-desktop-sm — the same threshold every other
+  // section on this page stacks to a single column at), the brand and
+  // contact columns squeezed side by side left too little width for the
+  // 48px email address, forcing an awkward mid-word wrap. Stacking here
+  // instead of only at $bp-lg (992px) gives each its own full width
+  // through that whole 992–1279px gap, not just below it.
+  @include respond-below('desktop-sm') {
     flex-direction: column;
     padding-bottom: $spacing-2xl;
   }
@@ -69,6 +75,9 @@
   width: 4.65rem;
   height: 5.05rem;
   background-color: #1d1d1d;
+  // TEMPORARY: local — footer/ 403s on the CDN (S3 AccessDenied) as of
+  // this migration pass. Swap back to url('#{$cdn-base}/footer/...')
+  // once that's fixed.
   mask-image: url('/assets/footer/logo-mark.png');
   mask-size: contain;
   mask-repeat: no-repeat;
@@ -154,7 +163,7 @@
   flex-direction: column;
   align-items: flex-start; // phone/email/socials are left-aligned in Figma, not flush-right
 
-  @include respond-below('lg') {
+  @include respond-below('desktop-sm') {
     width: 100%;
   }
 }
@@ -187,8 +196,17 @@
     font-size: 3.6rem;
   }
 
+  // Below 1280px the top row is already stacked to a single column
+  // (see .site-footer__top), so this no longer needs to read as a huge
+  // focal point next to the much smaller phone number/body copy above
+  // it — 36px held flat down to 768px was still noticeably oversized
+  // for that context.
+  @include respond-below('desktop-sm') {
+    font-size: 2.8rem;
+  }
+
   @include respond-below('md') {
-    font-size: 2.6rem;
+    font-size: 2.4rem;
   }
 }
 
@@ -273,7 +291,10 @@
   gap: $spacing-2xl;
   padding: 10rem 0 6rem;
 
-  @include respond-below('lg') {
+  // Same reasoning as .site-footer__top above — stacks a step earlier
+  // (1280px, not 992px) so "Independent Remittance Dealer"/info column
+  // isn't squeezed alongside the nav columns through that gap.
+  @include respond-below('desktop-sm') {
     flex-direction: column;
     padding: $spacing-2xl 0;
   }
@@ -296,6 +317,15 @@
   margin: 0;
   padding: 0;
   min-width: 21rem;
+
+  // Same reasoning as .site-footer__email/__info-heading — the middle
+  // row is already stacked to a single column below 1280px (see
+  // .site-footer__middle), so this list doesn't need its full-width gap
+  // that far down either.
+  @include respond-below('desktop-sm') {
+    gap: 2.4rem;
+    min-width: 0;
+  }
 
   @include respond-below('sm') {
     gap: $spacing-lg;
@@ -324,6 +354,11 @@
       [data-theme='dark'] & {
         color: #efefef;
       }
+    }
+
+    // Same reasoning as .site-footer__email/__info-heading above.
+    @include respond-below('desktop-sm') {
+      font-size: 1.9rem;
     }
 
     @include respond-below('md') {
@@ -356,6 +391,13 @@
 
   @include respond-below('narrow-desktop') {
     font-size: 3rem;
+  }
+
+  // Same reasoning as .site-footer__email — the middle row is also
+  // stacked to a single column below 1280px (see .site-footer__middle),
+  // so this doesn't need to hold its wider-layout size that far down.
+  @include respond-below('desktop-sm') {
+    font-size: 2.6rem;
   }
 
   @include respond-below('md') {

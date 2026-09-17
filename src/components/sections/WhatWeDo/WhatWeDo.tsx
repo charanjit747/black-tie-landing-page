@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { SectionBackgroundLines } from '@/components/common/SectionBackgroundLines';
 import { CommonButton } from '@/components/common/Button/CommonButton';
 import { ArrowUpRightIcon, ArrowNextIcon } from '@/constants/icons';
+import { ASSETS_BASE_URL } from '@/constants/cdn';
 import { ConcentricRingsIcon, VerticalLinesSphereIcon, GridSphereIcon } from './WhatWeDoIcons';
+import { initWhatWeDoAnimation } from '@/utils/gsapAnimations';
 
 // ── Features (matches Figma) ─────────────────────────────────
 const FEATURES = [
@@ -30,12 +32,29 @@ const FEATURES = [
 // dark #1d1d1d/white styling in both themes rather than following the
 // light/dark button tokens.
 export const WhatWeDo: React.FC = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const introRef = useRef<HTMLDivElement>(null);
+  const featureRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const ctaWrapRef = useRef<HTMLDivElement>(null);
+  const visualRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    return initWhatWeDoAnimation({
+      section: sectionRef.current,
+      intro: introRef.current,
+      features: featureRefs.current,
+      cta: ctaWrapRef.current,
+      visual: visualRef.current,
+    });
+  }, []);
+
   return (
-    <section className="what-we-do">
+    <section className="what-we-do" ref={sectionRef}>
       <SectionBackgroundLines />
       <div className="what-we-do__row">
         <div className="what-we-do__content">
-          <div className="what-we-do__intro">
+          <div className="what-we-do__intro" ref={introRef}>
             <span className="what-we-do__tag">
               WHAT WE DO
               <ArrowUpRightIcon size={11} />
@@ -48,7 +67,13 @@ export const WhatWeDo: React.FC = () => {
 
           <div className="what-we-do__features">
             {FEATURES.map(({ Icon, text }, index) => (
-              <div key={index} className="what-we-do__feature">
+              <div
+                key={index}
+                className="what-we-do__feature"
+                ref={(el) => {
+                  featureRefs.current[index] = el;
+                }}
+              >
                 <span className="what-we-do__feature-icon">
                   <Icon />
                 </span>
@@ -57,23 +82,30 @@ export const WhatWeDo: React.FC = () => {
             ))}
           </div>
 
-          <CommonButton
-            as="link"
-            href="/get-started"
-            variant="primary"
-            size="lg"
-            attachedIcon
-            rightIcon={<ArrowNextIcon size={16} />}
-            className="what-we-do__cta"
-          >
-            Get a free quote
-          </CommonButton>
+          {/* Plain wrapper just to give the CTA a ref — CommonButton
+              itself doesn't forward one. Not display:contents: GSAP
+              needs a real box to animate opacity/transform on, which
+              a contents-display element doesn't paint at all. */}
+          <div ref={ctaWrapRef} className="what-we-do__cta-wrap">
+            <CommonButton
+              as="link"
+              href="/get-started"
+              variant="primary"
+              size="lg"
+              attachedIcon
+              rightIcon={<ArrowNextIcon size={16} />}
+              className="what-we-do__cta"
+            >
+              Get a free quote
+            </CommonButton>
+          </div>
         </div>
 
         <video
           className="what-we-do__visual"
-          src="/assets/what-we-do/what-we-do.mp4"
-          poster="/assets/what-we-do/globe.jpg"
+          ref={visualRef}
+          src={`${ASSETS_BASE_URL}/what-we-do/what-we-do.mp4`}
+          poster={`${ASSETS_BASE_URL}/what-we-do/globe.jpg`}
           autoPlay
           loop
           muted

@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Container from 'react-bootstrap/Container';
 import { CommonButton } from '@/components/common/Button/CommonButton';
+import { initSecurityAnimation } from '@/utils/gsapAnimations';
 
 // ── Compliance Cards (matches Figma) — the middle card ("Hashlock
 // Audited") is the only one with the teal accent treatment and a
@@ -18,6 +19,9 @@ import { CommonButton } from '@/components/common/Button/CommonButton';
 // it into one image sidesteps that entirely: the whole lockup just
 // scales down as a unit like any other image. Each keeps its own
 // exported aspect ratio (they're not uniform widths). ────────────────
+// TEMPORARY: still local — security/ 403s on the CDN (S3 AccessDenied)
+// as of this migration pass. Swap back to `${ASSETS_BASE_URL}/security/...`
+// once that's fixed.
 const CARDS = [
   {
     lockup: '/assets/security/sumsub-lockup.png',
@@ -53,23 +57,39 @@ const CARDS = [
 // on purpose rather than pulled from the light/dark tokens (the same
 // reasoning as the header's always-dark solid state).
 export const Security: React.FC = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    return initSecurityAnimation({
+      section: sectionRef.current,
+      heading: headingRef.current,
+      cards: cardRefs.current,
+    });
+  }, []);
+
   return (
-    <section className="security">
+    <section className="security" ref={sectionRef}>
       <Container>
         <div className="security__card">
           <div className="security__glow" aria-hidden="true" />
 
-          <h2 className="security__heading">
+          <h2 className="security__heading" ref={headingRef}>
             Security and Compliance at
             <br />
             <span className="security__heading-muted">Institutional Standards</span>
           </h2>
 
           <div className="security__row">
-            {CARDS.map((card) => (
+            {CARDS.map((card, index) => (
               <div
                 key={card.title}
                 className={`security__item${card.accent ? ' security__item--accent' : ''}`}
+                ref={(el) => {
+                  cardRefs.current[index] = el;
+                }}
               >
                 <div className="security__item-wave" aria-hidden="true" />
 

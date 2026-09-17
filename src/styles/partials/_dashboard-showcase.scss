@@ -1,15 +1,17 @@
 // ============================================================
-// _dashboard-showcase.scss — Sticky scroll showcase (Dashboard / BTX
-// Markets / Investment Orders / Payment Screen)
+// _dashboard-showcase.scss — Dashboard Screens showcase (Dashboard /
+// BTX Markets / Investment Orders / Payment Screen)
 //
-// Desktop (≥ $bp-desktop-sm): a GSAP ScrollTrigger pins the right-side
-// screenshot column from when the list reaches the top of the viewport
-// until the LAST heading reaches the vertical center of the viewport
-// (see initDashboardShowcaseAnimation in utils/gsapAnimations.ts),
-// crossfading between the 4 stacked images the instant each item's own
-// heading enters the bottom 20% of the viewport. Below that breakpoint
-// the animation doesn't run at all — this falls back to a plain stacked
-// layout, each item with its own inline image directly beneath it.
+// Same two-column design as before (heading text left, its own
+// screenshot right, one row per step) but no sticky/pinned column and
+// no crossfade any more (see git history) — the section just scrolls
+// normally. A single grid with 2 columns (heading : image) auto-places
+// each step's heading/image pair into its own row, in DOM order, since
+// there are exactly 2 columns to fill per row. Each screenshot instead
+// plays its own one-time 3D tilt as it scrolls into view (see
+// initDashboardShowcaseAnimation in utils/gsapAnimations.ts) — the same
+// technique used by https://agntix-next.vercel.app/creative-agency's
+// "OUR RECENT PROJECTS" thumbnails.
 //
 // Theme-reactive text (confirmed against both Home-Light and Home-Dark
 // in Figma): near-black/near-white index+title, and a muted second
@@ -33,82 +35,71 @@
   }
 
   @include respond-below('md') {
-    padding: $spacing-3xl 0;
+    padding: $spacing-2xl 0;
   }
 
   @include respond-below('xs') {
-    padding: $spacing-2xl 0;
+    padding: $spacing-xl 0;
   }
 }
 
 // ── Two-column layout ────────────────────────────────────────
-// Figma: ~505px item column : 1195px image column, 20px gap.
+// Figma: ~505px item column : 1195px image column, 20px gap. Auto-flow
+// (the default) fills column 1 then column 2 per row, so simply
+// rendering [heading, image, heading, image, ...] in DOM order is
+// enough to pair each step's heading with its own image on the same row.
+// Stays a 2-column heading:image grid down to 768px, matching the
+// pre-animation design (see git history) — only the tilt animation
+// itself (see initDashboardShowcaseAnimation, gated to min-width 1280px
+// via gsap.matchMedia) and its no-JS CSS fallback below are min-width
+// gated, not this layout. Below 768px it switches to a single stacked
+// column instead — heading above its own image (already DOM order, so
+// no reordering needed) — since a 30/70 split has no room left for
+// either at phone widths.
 .dashboard-showcase__grid {
   display: grid;
   grid-template-columns: minmax(0, 30fr) minmax(0, 70fr);
-  gap: 2rem;
+  align-items: center;
+  column-gap: 2rem;
+  row-gap: $spacing-4xl;
 
-  // Below this, the sticky/pin animation doesn't run at all (see
-  // initDashboardShowcaseAnimation) — matches with a plain single
-  // column instead, so the layout switch lines up exactly with where
-  // the JS switches too.
   @include respond-below('desktop-sm') {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-}
-
-.dashboard-showcase__list {
-  display: flex;
-  flex-direction: column;
-
-  // Mobile/tablet fallback (see .dashboard-showcase__item-image) — 2
-  // cards per row from 768px up to $bp-desktop-sm, where the pinned
-  // media column and its own single-column list take over instead; a
-  // single column again below 768px. Row spacing here (not on the item
-  // itself) is what used to be each item's own padding-bottom — a grid
-  // gap replaces that now that items sit side by side, not just stacked.
-  @include respond-below('desktop-sm') {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    column-gap: $spacing-lg;
-    row-gap: $spacing-4xl;
+    row-gap: $spacing-3xl;
   }
 
   @include respond-below('md') {
     grid-template-columns: 1fr;
-    row-gap: $spacing-3xl;
+    // Much tighter than the side-by-side row-gap above: stacked, this
+    // is just the heading-to-image gap within one step, not a gap
+    // between two grid columns' worth of content.
+    row-gap: 2.4rem;
   }
 
   @include respond-below('xs') {
-    row-gap: $spacing-2xl;
+    row-gap: 1.6rem;
   }
 }
 
 .dashboard-showcase__item {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 1.6rem; // 16px
-  min-height: 90vh;
+  // The grid's own align-items: center would vertically center this
+  // against its (much taller) image otherwise — top-align just this
+  // cell instead, nudged down 10% to match the image's own visual
+  // start rather than sitting flush against the row's true top edge.
+  align-self: start;
+  margin-top: 15%;
 
-  @include respond-below('desktop-sm') {
-    min-height: 0;
-    justify-content: flex-start;
-    gap: $spacing-lg;
+  // That 15% nudge is only meaningful next to a much taller image in
+  // the same row — stacked single-column below 768px, the heading is
+  // simply the first block above its own image, no offset needed. The
+  // index-to-title gap also shrinks with the smaller stacked font
+  // sizes below (see .dashboard-showcase__index/__title).
+  @include respond-below('md') {
+    margin-top: 0;
+    gap: 0.4rem;
   }
-}
-
-// Just the heading text — the actual crossfade trigger (see
-// initDashboardShowcaseAnimation). Kept as its own element rather than
-// using .dashboard-showcase__item directly, since the item is a much
-// taller (90vh) flex box with the heading centered inside it; triggering
-// off the item's own top would fire the crossfade long before the
-// heading is anywhere near the viewport.
-.dashboard-showcase__heading {
-  display: flex;
-  flex-direction: column;
-  gap: 1.6rem;
 }
 
 .dashboard-showcase__index {
@@ -132,8 +123,12 @@
     font-size: 5rem;
   }
 
-  @include respond-below('xs') {
+  @include respond-below('md') {
     font-size: 4rem;
+  }
+
+  @include respond-below('xs') {
+    font-size: 3.2rem;
   }
 }
 
@@ -153,14 +148,18 @@
     font-size: 3.2rem;
   }
 
-  @include respond-below('xs') {
+  @include respond-below('md') {
     font-size: 2.6rem;
   }
 
-  // One line instead of the desktop's forced break onto a muted second
-  // line (e.g. "BTX Markets" instead of "BTX" / "Markets") — the <br/>
-  // it's built around only matters above this breakpoint.
-  @include respond-below('desktop-sm') {
+  @include respond-below('xs') {
+    font-size: 2.2rem;
+  }
+
+  // One line instead of a forced break onto a muted second line (e.g.
+  // "BTX Markets" instead of "BTX" / "Markets") once it's narrow enough
+  // that the two-line treatment stops looking intentional.
+  @include respond-below('md') {
     br {
       display: none;
     }
@@ -180,55 +179,43 @@
   }
 }
 
-// ── Right column: the pinned/crossfading screenshots ────────
-// GSAP pins this wrapper (not the image box itself) — see
-// initDashboardShowcaseAnimation. Its own height is a fixed 100vh
-// (align-self: start keeps it from stretching to the grid row's full,
-// much taller, height, which would make it balloon into the section
-// above once pinned), and the actual aspect-ratio image box is centered
-// inside it with plain flexbox rather than any percentage-based offset.
-// Hidden below $bp-desktop-sm — see .dashboard-showcase__item-image for
-// the mobile equivalent.
-.dashboard-showcase__media {
-  position: relative;
-  align-self: start;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+// ── Each step's own screenshot ────────────────────────────────
+// Perspective-hosting wrapper — the grid cell itself. `perspective` has
+// to live on an ANCESTOR of the rotated element to visually affect it,
+// not on the rotated element itself, and each card gets its own (rather
+// than one shared across the whole grid) so its 3D vanishing point
+// stays centered on that card, not on the grid as a whole. 60px is the
+// reference site's own exact value, read directly from its production
+// JS bundle (gsap.set(".studio-project-thumb", { perspective: 60 })) —
+// not inferred from computed styles.
+.dashboard-showcase__item-image {
+  perspective: 60px;
   width: 100%;
-
-  // Global small-desktop size-down — see $bp-narrow-desktop. The image
-  // itself shrinks (see .dashboard-showcase__media-inner); once it's
-  // no longer full-width, flex-end keeps it flush to the right of the
-  // column instead of centered with equal gaps on both sides.
-  @include respond-below('narrow-desktop') {
-    justify-content: flex-end;
-  }
-
-  @include respond-below('desktop-sm') {
-    display: none;
-  }
 }
 
-.dashboard-showcase__media-inner {
+// The actual GSAP-animated element (see initDashboardShowcaseAnimation)
+// — the whole card, gradient border frame included, so the frame tilts
+// together with the screenshot as one rigid piece instead of staying
+// static while just the image inside it moves.
+//
+// `overflow: hidden` + the image inset (via padding, not a separate
+// margin'd child) both live HERE, on the same element the 3D transform
+// is applied to — not on a separate static child. A child that
+// establishes its own clip/stacking context (overflow: hidden +
+// border-radius) nested inside a 3D-rotated ancestor can compute its
+// clip mask inconsistently with the ancestor's own perspective
+// projection in some browsers' rendering paths — that mismatch is what
+// was making the revealed gradient-border gap look lopsided (wider on
+// one side than the other) once a real tilt was in play, not the
+// symmetric reveal it looks like in the flat, untransformed CSS.
+// Consolidating the clip onto the transformed element itself removes
+// that mismatch entirely: there's only one box, so there's nothing for
+// its clip to disagree with.
+.dashboard-showcase__item-image-card {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1195 / 787;
-
-  // Global small-desktop size-down — see $bp-narrow-desktop. 20%
-  // smaller, aligned to the right of .dashboard-showcase__media (see
-  // above) rather than centered.
-  @include respond-below('narrow-desktop') {
-    width: 80%;
-  }
-}
-
-.dashboard-showcase__image {
-  position: absolute;
-  inset: 0;
-  opacity: 0; // matches the GSAP-set initial state as a no-JS fallback
+  padding: 1rem;
   border-radius: 3rem;
+  overflow: hidden;
   // Figma: a diagonal gradient border — light gray light theme, dark
   // gray dark theme. Neither is an existing token (a one-off frame
   // effect, not reused elsewhere), same reasoning as other hardcoded
@@ -239,41 +226,28 @@
     background: linear-gradient(123deg, #484848 0%, transparent 41%, transparent 67%, #484848 100%);
   }
 
-  &:first-child {
-    opacity: 1; // the initial no-JS/first-paint state before GSAP sets it
+  // No-JS/first-paint fallback matching GSAP's own initial gsap.set —
+  // only below 1280px is the tilt (JS and this fallback both) switched
+  // off entirely, back to the flat pre-animation look.
+  transform: rotateX(1.8deg);
+
+  @include respond-below('desktop-sm') {
+    transform: none;
   }
 }
 
-// A separate inset wrapper (not padding on .dashboard-showcase__image
-// itself) — Next's `fill` images size to their immediate parent's
-// border box regardless of that parent's own padding, so the "reveal
-// the gradient behind it" gap needs its own element with `inset`.
-.dashboard-showcase__image-inner {
-  position: absolute;
-  inset: 1rem;
+// Purely static now — just the aspect-ratio box; rounding/clipping both
+// live on the parent card above.
+.dashboard-showcase__item-image-inner {
+  position: relative;
+  aspect-ratio: 1195 / 787;
   border-radius: 2.6rem;
-  overflow: hidden;
-
-  img {
-    object-fit: cover;
-  }
-}
-
-// ── Mobile/tablet fallback: a plain inline image per item ────
-// Only shown below $bp-desktop-sm, where the pinned/crossfading media
-// column above is hidden and the animation doesn't run at all.
-.dashboard-showcase__item-image {
-  display: none;
-  border-radius: 2rem;
   overflow: hidden;
 
   img {
     display: block;
     width: 100%;
-    height: auto;
-  }
-
-  @include respond-below('desktop-sm') {
-    display: block;
+    height: 100%;
+    object-fit: cover;
   }
 }

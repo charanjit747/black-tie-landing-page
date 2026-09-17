@@ -1,12 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Slider, { Settings } from 'react-slick';
 import Container from 'react-bootstrap/Container';
 import { SectionBackgroundLines } from '@/components/common/SectionBackgroundLines';
 import { CommonButton } from '@/components/common/Button/CommonButton';
 import { ArrowNextIcon } from '@/constants/icons';
+import { ASSETS_BASE_URL } from '@/constants/cdn';
+import { initEcosystemTitleAnimation } from '@/utils/gsapAnimations';
 
 // ── Slides (matches Figma "Slides" component, 4 slides) ──────
 // Each slide is one complete, pre-flattened export straight out of
@@ -15,10 +17,10 @@ import { ArrowNextIcon } from '@/constants/icons';
 // or reconstructed in code, so there's nothing here to get out of sync
 // with the design.
 const SLIDES = [
-  { id: 'asset-hub', image: '/assets/ecosystem/slide-1-asset-hub.jpg', alt: 'Black Tie Asset Hub — Tokenisation & Primary Issuance Platform License' },
-  { id: 'markets', image: '/assets/ecosystem/slide-2-markets.jpg', alt: 'Black Tie Markets — Secondary Trading Venue for Tokenised Assets' },
-  { id: 'smart', image: '/assets/ecosystem/slide-3-smart.jpg', alt: 'Black Tie Smart — Coming Soon' },
-  { id: 'treasury', image: '/assets/ecosystem/slide-4-treasury.jpg', alt: 'Black Tie Treasury — Coming Soon' },
+  { id: 'asset-hub', image: `${ASSETS_BASE_URL}/ecosystem/slide-1-asset-hub.jpg`, alt: 'Black Tie Asset Hub — Tokenisation & Primary Issuance Platform License' },
+  { id: 'markets', image: `${ASSETS_BASE_URL}/ecosystem/slide-2-markets.jpg`, alt: 'Black Tie Markets — Secondary Trading Venue for Tokenised Assets' },
+  { id: 'smart', image: `${ASSETS_BASE_URL}/ecosystem/slide-3-smart.jpg`, alt: 'Black Tie Smart — Coming Soon' },
+  { id: 'treasury', image: `${ASSETS_BASE_URL}/ecosystem/slide-4-treasury.jpg`, alt: 'Black Tie Treasury — Coming Soon' },
 ];
 
 // Plain react-slick settings (not the CommonSlider wrapper — that
@@ -59,27 +61,42 @@ const SLIDER_SETTINGS: Settings = {
 // dark pill on light theme, light pill on dark theme — see
 // .ecosystem__cta.
 export const Ecosystem: React.FC = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const ctaWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    return initEcosystemTitleAnimation({
+      section: sectionRef.current,
+      heading: headingRef.current,
+      cta: ctaWrapRef.current,
+    });
+  }, []);
+
   return (
-    <section className="ecosystem">
+    <section id="ecosystem" className="ecosystem" ref={sectionRef}>
       <SectionBackgroundLines />
       <Container>
         <div className="ecosystem__header">
-          <h2 className="ecosystem__heading">
+          <h2 className="ecosystem__heading" ref={headingRef}>
             Black Tie Real-World{' '}
             <span className="ecosystem__heading-muted">Asset Infrastructure Ecosystem</span>
           </h2>
 
-          <CommonButton
-            as="link"
-            href="/get-started"
-            variant="primary"
-            size="lg"
-            attachedIcon
-            rightIcon={<ArrowNextIcon size={16} />}
-            className="ecosystem__cta"
-          >
-            Get a free quote
-          </CommonButton>
+          <div ref={ctaWrapRef} className="ecosystem__cta-wrap">
+            <CommonButton
+              as="link"
+              href="/get-started"
+              variant="primary"
+              size="lg"
+              attachedIcon
+              rightIcon={<ArrowNextIcon size={16} />}
+              className="ecosystem__cta"
+            >
+              Get a free quote
+            </CommonButton>
+          </div>
         </div>
       </Container>
 

@@ -1,7 +1,6 @@
 import React from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { CommonButton } from '@/components/common/Button/CommonButton';
-import { ArrowLeftIcon } from '@/constants/icons';
 
 export const metadata = {
   title: '404 — Page Not Found | BlackTie',
@@ -65,13 +64,7 @@ export default function NotFound() {
             Sorry, the page you are looking for doesn&apos;t exist or has been moved.
           </p>
 
-          <CommonButton
-            as="link"
-            href="/"
-            variant="primary"
-            size="lg"
-            leftIcon={<ArrowLeftIcon size={18} />}
-          >
+          <CommonButton as="link" href="/" variant="primary" size="lg">
             Back to Home
           </CommonButton>
         </div>

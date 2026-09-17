@@ -1,0 +1,83 @@
+// ============================================================
+// _custom-cursor.scss — Premium ring + dot custom cursor
+//
+// Desktop-only, same gating as every GSAP effect in this project
+// (min-width: 1280px), plus (hover: hover) and (pointer: fine) so a
+// touch/coarse-pointer device docked to a wide external monitor never
+// gets a fake cursor it can't actually see move. Below that, this whole
+// file is a no-op: the native cursor is left completely alone.
+// ============================================================
+
+@use 'variables' as *;
+
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  // The native cursor is hidden sitewide; the ring/dot below stand in
+  // for it. `!important` guards against any element-level `cursor: ...`
+  // declared elsewhere in the codebase re-enabling the native arrow.
+  body {
+    cursor: none !important;
+  }
+
+  // Clickable elements get the native pointer back explicitly — the
+  // custom ring fades out over them instead (see .custom-cursor--active
+  // below), so there's still a clear "this is clickable" affordance
+  // rather than no cursor at all while it's transitioning out.
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  label,
+  [role='button'],
+  .btn-common {
+    cursor: pointer !important;
+  }
+}
+
+// Outer ring — trails the pointer with a soft lag (see
+// initCustomCursorAnimation in utils/gsapAnimations.ts).
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-text-primary);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform, opacity;
+
+  // display: none below the gate above keeps it fully out of layout —
+  // matches the "zero GSAP/API calls below 1280px" rule elsewhere in
+  // this project (see gsapAnimations.ts): nothing renders, nothing
+  // needs to be positioned, on mobile/tablet/coarse-pointer devices.
+  display: none;
+
+  @media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+    display: block;
+  }
+}
+
+// Inner dot — near-instant follow, sits on top of the ring.
+.custom-cursor__dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background-color: var(--color-text-primary);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform, opacity;
+  display: none;
+
+  @media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+    display: block;
+  }
+}

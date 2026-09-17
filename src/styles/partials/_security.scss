@@ -48,6 +48,9 @@
 .security__glow {
   position: absolute;
   inset: 0;
+  // TEMPORARY: local — security/ 403s on the CDN (S3 AccessDenied) as of
+  // this migration pass. Swap back to url('#{$cdn-base}/security/...')
+  // once that's fixed.
   background-image: url('/assets/security/glow-light.jpg');
   background-size: cover;
   background-position: center;

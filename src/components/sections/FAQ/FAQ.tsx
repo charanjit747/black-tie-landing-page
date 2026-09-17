@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Container from 'react-bootstrap/Container';
 import { SectionBackgroundLines } from '@/components/common/SectionBackgroundLines';
 import { ArrowUpRightIcon } from '@/constants/icons';
+import { initFAQAnimation } from '@/utils/gsapAnimations';
 
 // ── Questions (matches Figma exactly) ─────────────────────────
 // Figma only has real answer copy authored for the 2nd question (the
@@ -44,12 +45,24 @@ const FAQS = [
 // measurement step at all.
 export const FAQ: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(1);
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    return initFAQAnimation({
+      section: sectionRef.current,
+      header: headerRef.current,
+      items: itemRefs.current,
+    });
+  }, []);
 
   return (
-    <section className="faq">
+    <section id="faq" className="faq" ref={sectionRef}>
       <SectionBackgroundLines />
       <Container>
-        <div className="faq__header">
+        <div className="faq__header" ref={headerRef}>
           <span className="faq__tag">
             FAQ<span className="faq__tag-lower">s</span>
             <ArrowUpRightIcon size={11} />
@@ -63,7 +76,13 @@ export const FAQ: React.FC = () => {
           {FAQS.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
-              <div key={faq.question} className={`faq__item${isOpen ? ' faq__item--open' : ''}`}>
+              <div
+                key={faq.question}
+                className={`faq__item${isOpen ? ' faq__item--open' : ''}`}
+                ref={(el) => {
+                  itemRefs.current[index] = el;
+                }}
+              >
                 <button
                   type="button"
                   className="faq__question"

@@ -5,6 +5,7 @@ import Container from 'react-bootstrap/Container';
 import { CommonButton } from '@/components/common/Button/CommonButton';
 import { HoverSlideText } from '@/components/common/HoverSlideText';
 import { ArrowNextIcon, ArrowUpRightIcon } from '@/constants/icons';
+import { ASSETS_BASE_URL } from '@/constants/cdn';
 import { initHeroAnimation } from '@/utils/gsapAnimations';
 
 // ── Ticker Config (matches Figma marquee row) ──────────────────
@@ -41,11 +42,11 @@ export const Hero: React.FC = () => {
   }, []);
 
   return (
-    <section className="hero" ref={heroRef}>
+    <section id="home" className="hero" ref={heroRef}>
       <div className="hero__card">
         <video
           className="hero__bg-video"
-          poster="/assets/hero/hero-bg.jpg"
+          poster={`${ASSETS_BASE_URL}/hero/hero-bg.jpg`}
           autoPlay
           loop
           muted
@@ -54,7 +55,7 @@ export const Hero: React.FC = () => {
           preload="auto"
           aria-hidden="true"
         >
-          <source src="/assets/hero/hero-slide1.mp4" type="video/mp4" />
+          <source src={`${ASSETS_BASE_URL}/hero/hero-slide1.mp4`} type="video/mp4" />
         </video>
 
         <div className="hero__body">

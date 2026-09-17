@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Formik, Form, type FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import Container from 'react-bootstrap/Container';
@@ -8,6 +8,7 @@ import { SectionBackgroundLines } from '@/components/common/SectionBackgroundLin
 import { FormikControl } from '@/components/forms/FormikControl';
 import { CommonButton } from '@/components/common/Button/CommonButton';
 import { ArrowUpRightIcon } from '@/constants/icons';
+import { initContactUsAnimation } from '@/utils/gsapAnimations';
 
 // ── Form Shape ───────────────────────────────────────────────
 // Figma's field order: full name, company name, mobile number,
@@ -106,6 +107,21 @@ const guardFieldKeystrokes = (e: React.KeyboardEvent<HTMLFormElement>) => {
 // page, it's exported as one flattened image per theme rather than
 // reconstructed live, and swapped via CSS background-image.
 export const ContactUs: React.FC = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const globeRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    return initContactUsAnimation({
+      section: sectionRef.current,
+      heading: headingRef.current,
+      globe: globeRef.current,
+      form: formRef.current,
+    });
+  }, []);
+
   const handleSubmit = (
     values: ContactFormValues,
     { resetForm, setSubmitting }: FormikHelpers<ContactFormValues>
@@ -116,7 +132,7 @@ export const ContactUs: React.FC = () => {
   };
 
   return (
-    <section className="contact-us">
+    <section className="contact-us" ref={sectionRef}>
       <SectionBackgroundLines />
       <Container>
         <div className="contact-us__card">
@@ -125,7 +141,7 @@ export const ContactUs: React.FC = () => {
               Contact Us
               <ArrowUpRightIcon size={11} />
             </span>
-            <h2 className="contact-us__heading">
+            <h2 className="contact-us__heading" ref={headingRef}>
               Reach out via the contact form on the platform for inquiries related to{' '}
               <span className="contact-us__heading-muted">
                 investment opportunities, onboarding, and partnerships.
@@ -134,7 +150,7 @@ export const ContactUs: React.FC = () => {
           </div>
 
           <div className="contact-us__body">
-            <div className="contact-us__globe" aria-hidden="true" />
+            <div className="contact-us__globe" ref={globeRef} aria-hidden="true" />
 
             <Formik
               initialValues={INITIAL_VALUES}
@@ -142,7 +158,12 @@ export const ContactUs: React.FC = () => {
               onSubmit={handleSubmit}
             >
               {({ isSubmitting }) => (
-                <Form className="contact-us__form" noValidate onKeyDown={guardFieldKeystrokes}>
+                <Form
+                  ref={formRef}
+                  className="contact-us__form"
+                  noValidate
+                  onKeyDown={guardFieldKeystrokes}
+                >
                   <div className="contact-us__fields">
                     <FormikControl control="input" name="fullName" placeholder="Enter full name" />
                     <FormikControl control="input" name="companyName" placeholder="Enter company name" />

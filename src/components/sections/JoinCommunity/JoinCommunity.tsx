@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Formik, Form, type FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import Container from 'react-bootstrap/Container';
 import { SectionBackgroundLines } from '@/components/common/SectionBackgroundLines';
 import { FormikControl } from '@/components/forms/FormikControl';
 import { CommonButton } from '@/components/common/Button/CommonButton';
+import { initJoinCommunityAnimation } from '@/utils/gsapAnimations';
 
 // ── Form Shape ───────────────────────────────────────────────
 interface SubscribeFormValues {
@@ -28,6 +29,21 @@ const VALIDATION_SCHEMA = Yup.object({
 // the page-flow slot, unlike Contact Us a section down, so it's used
 // verbatim here with no naming ambiguity.
 export const JoinCommunity: React.FC = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const subheadRef = useRef<HTMLDivElement>(null);
+  const formWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    return initJoinCommunityAnimation({
+      section: sectionRef.current,
+      heading: headingRef.current,
+      subhead: subheadRef.current,
+      form: formWrapRef.current,
+    });
+  }, []);
+
   const handleSubmit = (
     values: SubscribeFormValues,
     { resetForm, setSubmitting }: FormikHelpers<SubscribeFormValues>
@@ -38,13 +54,13 @@ export const JoinCommunity: React.FC = () => {
   };
 
   return (
-    <section className="join-community">
+    <section className="join-community" ref={sectionRef}>
       <SectionBackgroundLines />
       <Container>
         <div className="join-community__inner">
-          <h2 className="join-community__heading">Join Our Community</h2>
+          <h2 className="join-community__heading" ref={headingRef}>Join Our Community</h2>
 
-          <div className="join-community__subhead">
+          <div className="join-community__subhead" ref={subheadRef}>
             <p className="join-community__tagline">
               Where Real Assets <span className="join-community__tagline-muted">Meet Digital Markets</span>
             </p>
@@ -54,6 +70,7 @@ export const JoinCommunity: React.FC = () => {
             </p>
           </div>
 
+          <div ref={formWrapRef} className="join-community__form-wrap">
           <Formik initialValues={INITIAL_VALUES} validationSchema={VALIDATION_SCHEMA} onSubmit={handleSubmit}>
             {({ isSubmitting }) => (
               <Form className="join-community__form" noValidate>
@@ -76,6 +93,7 @@ export const JoinCommunity: React.FC = () => {
               </Form>
             )}
           </Formik>
+          </div>
         </div>
       </Container>
     </section>

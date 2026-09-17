@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Container from 'react-bootstrap/Container';
 import { SectionBackgroundLines } from '@/components/common/SectionBackgroundLines';
+import { ASSETS_BASE_URL } from '@/constants/cdn';
 import { initDashboardShowcaseAnimation } from '@/utils/gsapAnimations';
 
 // ── Steps Config (matches Figma: Dashboard / BTX Markets / Investment
@@ -13,65 +14,51 @@ const STEPS = [
     index: '01',
     title: 'Dashboard',
     titleMuted: null,
-    image: '/assets/dashboard-showcase/dashboard.jpg',
+    image: `${ASSETS_BASE_URL}/dashboard-showcase/dashboard.jpg`,
   },
   {
     index: '02',
     title: 'BTX',
     titleMuted: 'Markets',
-    image: '/assets/dashboard-showcase/btx-markets.jpg',
+    image: `${ASSETS_BASE_URL}/dashboard-showcase/btx-markets.jpg`,
   },
   {
     index: '03',
     title: 'Investment',
     titleMuted: 'Orders',
-    image: '/assets/dashboard-showcase/investment-orders.jpg',
+    image: `${ASSETS_BASE_URL}/dashboard-showcase/investment-orders.jpg`,
   },
   {
     index: '04',
     title: 'Payment Screen',
     titleMuted: '+ E-Signature',
-    image: '/assets/dashboard-showcase/payment-screen.jpg',
+    image: `${ASSETS_BASE_URL}/dashboard-showcase/payment-screen.jpg`,
   },
 ] as const;
 
 // ── Component ────────────────────────────────────────────────
-// Desktop (≥1280px): a GSAP ScrollTrigger pins the right column (a
-// full-viewport-height wrapper, flex-centered — see
-// .dashboard-showcase__media) starting when the list reaches the top
-// of the viewport, and — critically — ending exactly when the LAST
-// heading reaches the vertical center of the viewport (tied directly to
-// that heading via `endTrigger`/`end: 'center center'`, not an
-// approximated scroll distance), so the section only becomes scrollable
-// again once the last slide is centered against the image. Crossfades
-// between the 4 stacked images the instant each item's own heading
-// enters the bottom 20% of the viewport (see
+// Same two-column design as before (heading text on the left, its own
+// screenshot on the right, one row per step) but no sticky/pinned
+// column and no crossfade any more — the whole section just scrolls
+// normally, a single grid auto-placing each heading/image pair into
+// its own row. Each screenshot instead plays its own one-time 3D tilt
+// as it scrolls into view — the same technique used by
+// https://agntix-next.vercel.app/creative-agency's "OUR RECENT
+// PROJECTS" thumbnails. The GSAP-animated element is
+// .dashboard-showcase__item-image-card — the whole card, gradient
+// border frame included, not just the cropped image inside it — so the
+// frame tilts along with the screenshot as one rigid piece rather than
+// staying static while the image moves inside it. See
 // initDashboardShowcaseAnimation in utils/gsapAnimations.ts for the
-// actual ScrollTrigger work — this component only wires up the DOM
-// refs). Below 1280px the animation doesn't run at all — see
-// .dashboard-showcase__item-image, a plain inline image per item
-// instead.
+// actual GSAP/ScrollTrigger work.
 export const DashboardShowcase: React.FC = () => {
-  const listRef = useRef<HTMLDivElement>(null);
-  const mediaRef = useRef<HTMLDivElement>(null);
-  const headingRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const imageRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const cardRefs = useRef<Array<HTMLElement | null>>([]);
 
   useEffect(() => {
-    if (!listRef.current || !mediaRef.current) return;
+    const cards = cardRefs.current.filter((el): el is HTMLElement => el !== null);
+    if (cards.length === 0) return;
 
-    const headings = headingRefs.current.filter((el): el is HTMLDivElement => el !== null);
-    const images = imageRefs.current.filter((el): el is HTMLDivElement => el !== null);
-    if (headings.length === 0 || images.length === 0) return;
-
-    const cleanup = initDashboardShowcaseAnimation({
-      list: listRef.current,
-      media: mediaRef.current,
-      headings,
-      images,
-    });
-
-    return cleanup;
+    return initDashboardShowcaseAnimation({ cards });
   }, []);
 
   return (
@@ -79,70 +66,47 @@ export const DashboardShowcase: React.FC = () => {
       <SectionBackgroundLines />
       <Container>
         <div className="dashboard-showcase__grid">
-          <div className="dashboard-showcase__list" ref={listRef}>
-            {STEPS.map((step, index) => (
-              <div key={step.index} className="dashboard-showcase__item">
-                {/* The crossfade trigger — deliberately just the heading
-                    text, not the whole (much taller) item box, so the
-                    fade fires when the heading itself reaches the
-                    bottom 20% of the viewport, not whenever the item's
-                    own top happens to. */}
-                <div
-                  className="dashboard-showcase__heading"
-                  ref={(el) => {
-                    headingRefs.current[index] = el;
-                  }}
-                >
-                  <p className="dashboard-showcase__index">{step.index}</p>
-                  <h3 className="dashboard-showcase__title">
-                    {step.title}
-                    {step.titleMuted && (
-                      <>
-                        {/* The trailing space (before the <br/>, so it's
-                            invisible at the line break) is what keeps
-                            "BTX Markets" etc. reading as one line with a
-                            gap once <br/> is hidden — see
-                            .dashboard-showcase__title br below. */}
-                        {' '}
-                        <br />
-                        <span className="dashboard-showcase__title-muted">{step.titleMuted}</span>
-                      </>
-                    )}
-                  </h3>
-                </div>
-
-                {/* Mobile/tablet fallback — hidden at ≥1280px, where the
-                    sticky media column to the right takes over instead. */}
-                <div className="dashboard-showcase__item-image">
-                  <Image
-                    src={step.image}
-                    alt={step.title}
-                    width={1195}
-                    height={787}
-                    sizes="100vw"
-                  />
-                </div>
+          {STEPS.map((step, index) => (
+            <React.Fragment key={step.index}>
+              <div className="dashboard-showcase__item">
+                <p className="dashboard-showcase__index">{step.index}</p>
+                <h3 className="dashboard-showcase__title">
+                  {step.title}
+                  {step.titleMuted && (
+                    <>
+                      {/* The trailing space (before the <br/>, so it's
+                          invisible at the line break) is what keeps
+                          "BTX Markets" etc. reading as one line with a
+                          gap once <br/> is hidden — see
+                          .dashboard-showcase__title br below. */}
+                      {' '}
+                      <br />
+                      <span className="dashboard-showcase__title-muted">{step.titleMuted}</span>
+                    </>
+                  )}
+                </h3>
               </div>
-            ))}
-          </div>
 
-          <div className="dashboard-showcase__media" ref={mediaRef} aria-hidden="true">
-            <div className="dashboard-showcase__media-inner">
-              {STEPS.map((step, index) => (
+              <div className="dashboard-showcase__item-image">
                 <div
-                  key={step.index}
-                  className="dashboard-showcase__image"
+                  className="dashboard-showcase__item-image-card"
                   ref={(el) => {
-                    imageRefs.current[index] = el;
+                    cardRefs.current[index] = el;
                   }}
                 >
-                  <div className="dashboard-showcase__image-inner">
-                    <Image src={step.image} alt="" fill sizes="(min-width: 1280px) 70vw, 0px" />
+                  <div className="dashboard-showcase__item-image-inner">
+                    <Image
+                      src={step.image}
+                      alt={step.title}
+                      width={1195}
+                      height={787}
+                      sizes="(min-width: 1280px) 70vw, 100vw"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            </React.Fragment>
+          ))}
         </div>
       </Container>
     </section>

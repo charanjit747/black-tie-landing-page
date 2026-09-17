@@ -17,7 +17,6 @@ interface CommonButtonBaseProps {
   disabled?: boolean;
   block?: boolean;
   iconOnly?: boolean;
-  leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   /**
    * Renders `rightIcon` as its own full-height circular cap flush against
@@ -68,7 +67,6 @@ export const CommonButton: React.FC<CommonButtonProps> = ({
   disabled = false,
   block = false,
   iconOnly = false,
-  leftIcon,
   rightIcon,
   attachedIcon = false,
   className = '',
@@ -76,11 +74,6 @@ export const CommonButton: React.FC<CommonButtonProps> = ({
   ...rest
 }) => {
   const isSplit = attachedIcon && !!rightIcon && !iconOnly && !loading;
-  // Only buttons that are actually given an icon prop get the rounded
-  // arrow-badge treatment — a plain CommonButton with no leftIcon/
-  // rightIcon stays plain text (see the HoverSlideText fallback below).
-  const hasIcon = !!leftIcon || !!rightIcon;
-  const popIcon = rightIcon ?? leftIcon;
 
   const classes = [
     'btn-common',
@@ -111,21 +104,11 @@ export const CommonButton: React.FC<CommonButtonProps> = ({
           <span className="btn-common__label">{children}</span>
           <span className="btn-common__icon-cap">{rightIcon}</span>
         </>
-      ) : hasIcon ? (
-        // A button given an explicit icon prop: a small rounded arrow
-        // badge on both sides of the label, using that icon. Left one
-        // hidden at rest, right one visible — on hover they swap
-        // prominence (pop in / pop out at the same time). The label
-        // itself never moves.
-        <>
-          <span className="btn-icon-pop btn-icon-pop--left">{popIcon}</span>
-          <span className="btn-common__text">{children}</span>
-          <span className="btn-icon-pop btn-icon-pop--right">{popIcon}</span>
-        </>
       ) : (
-        // No icon prop at all — plain text button. Hover feedback is the
-        // same "duplicate slides up" effect used on the hero ticker
-        // links, via the shared HoverSlideText component.
+        // Plain text button (the default, and every button without
+        // attachedIcon+rightIcon). Hover feedback is the same "duplicate
+        // slides up" effect used on the hero ticker links, via the
+        // shared HoverSlideText component.
         <HoverSlideText>{children}</HoverSlideText>
       )}
     </>

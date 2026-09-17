@@ -10,14 +10,19 @@ import { toggleTheme } from '@/store/slices/themeSlice';
 import { CommonButton } from '@/components/common/Button/CommonButton';
 import { MenuIcon, SunIcon, MoonIcon } from '@/constants/icons';
 import { MobileMenu } from './MobileMenu';
+import { getLenis } from '@/providers/LenisProvider';
 
 // ── Nav Links Config (matches Figma: Home / Marketplace / Learn / Partner With Us / FAQs) ──
+// Hrefs are in-page anchors to the matching homepage section (not
+// separate routes) — Home→Hero, Marketplace→Ecosystem, Learn→How It
+// Works, Partner With Us→Our Partners, FAQs→FAQ. Smooth-scrolled via
+// Lenis (see handleNavClick below) rather than a plain browser jump.
 const NAV_LINKS = [
-  { label: 'Home',            href: '/' },
-  { label: 'Marketplace',     href: '/marketplace' },
-  { label: 'Learn',           href: '/learn' },
-  { label: 'Partner With Us', href: '/partner' },
-  { label: 'FAQs',            href: '/faqs' },
+  { label: 'Home',            href: '#home' },
+  { label: 'Marketplace',     href: '#ecosystem' },
+  { label: 'Learn',           href: '#how-it-works' },
+  { label: 'Partner With Us', href: '#partners' },
+  { label: 'FAQs',            href: '#faq' },
 ] as const;
 
 // ── Component ────────────────────────────────────────────────
@@ -35,6 +40,7 @@ export const Header: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
 
@@ -67,8 +73,20 @@ export const Header: React.FC = () => {
   // (visible as flicker) on every one of those micro-corrections.
   useEffect(() => {
     const DEAD_ZONE = 4;
+
+    // Seeded from the real scroll position at mount, not 0 — a reload
+    // (or back/forward restore) can land mid-page before this effect
+    // even runs. Seeding `lastScrollY` at 0 made the very first
+    // `handleScroll()` call see a huge fake "scrolled down" delta
+    // (0 → actual y), which hid the header and left `scrolled` at its
+    // stale `false` (only the scroll-UP branch below ever sets it) —
+    // i.e. the header lost its solid/visible state until the user's
+    // next real scroll happened to move it back up past the dead zone.
+    const initialY = Math.max(0, window.scrollY);
     let hiddenState = false;
-    let scrolledState = false;
+    let scrolledState = initialY > 80;
+    lastScrollY.current = initialY;
+    setScrolled(scrolledState);
 
     const handleScroll = () => {
       if (ticking.current) return;
@@ -97,10 +115,34 @@ export const Header: React.FC = () => {
       });
     };
 
-    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Smooth-scrolls to the matching homepage section via the site's own
+  // Lenis instance (a native anchor jump would be instant and fight
+  // Lenis's momentum) — used by the logo, desktop nav, and mobile nav.
+  // Off-page (not on "/"), this is a no-op: the <Link> falls through to
+  // a normal Next navigation to "/#id", and the browser's own hash
+  // handling takes it from there.
+  const scrollToSection = (e: React.MouseEvent, href: string) => {
+    if (!isHome || !href.startsWith('#')) return;
+
+    const target = document.getElementById(href.slice(1));
+    if (!target) return;
+
+    e.preventDefault();
+    setMenuOpen(false);
+
+    const headerOffset = (headerRef.current?.offsetHeight ?? 0) + 16;
+    const lenis = getLenis();
+    if (lenis) {
+      lenis.scrollTo(target, { offset: -headerOffset });
+    } else {
+      const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -111,6 +153,7 @@ export const Header: React.FC = () => {
   return (
     <>
       <header
+        ref={headerRef}
         className={[
           'site-header',
           // Two distinct states — home is transparent only at the very
@@ -126,8 +169,18 @@ export const Header: React.FC = () => {
         <div className="site-header__inner">
 
           {/* ── Logo ── */}
-          <Link href="/" className="site-header__logo" aria-label="Black Tie Asset Hub — Home">
+          {/* Always points at "/" (so it still works from another page)
+              but on the homepage itself this scrolls smoothly to the
+              top instead of being a same-URL no-op navigation. */}
+          <Link
+            href="/#home"
+            onClick={(e) => scrollToSection(e, '#home')}
+            className="site-header__logo"
+            aria-label="Black Tie Asset Hub — Home"
+          >
             <Image
+              // TEMPORARY: reverted to local — CDN path 403s (S3
+              // AccessDenied), see logo/ in the CDN migration notes.
               src="/assets/logo/black-tie-logo.png"
               alt="Black Tie Asset Hub"
               width={167}
@@ -141,10 +194,9 @@ export const Header: React.FC = () => {
             {NAV_LINKS.map(({ label, href }) => (
               <Link
                 key={href}
-                href={href}
-                className={`site-header__nav-link${
-                  pathname === href ? ' site-header__nav-link--active' : ''
-                }`}
+                href={isHome ? href : `/${href}`}
+                onClick={(e) => scrollToSection(e, href)}
+                className="site-header__nav-link"
               >
                 {label}
               </Link>
@@ -218,6 +270,8 @@ export const Header: React.FC = () => {
         onClose={() => setMenuOpen(false)}
         links={NAV_LINKS}
         activePath={pathname}
+        onLinkClick={scrollToSection}
+        isHome={isHome}
       />
     </>
   );

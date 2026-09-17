@@ -11,6 +11,7 @@ import 'react-phone-input-2/lib/style.css';
 // ── Global SCSS (design system + custom styles) ──────────────
 import '@/styles/global.scss';
 import { SkipLink } from '@/components/common/SkipLink';
+import { CustomCursor } from '@/components/common/CustomCursor/CustomCursor';
 
 // Sitewide brand typeface per Figma (DM Sans is the only font used across
 // the whole design — nav, buttons, headings and body copy all use it).
@@ -49,6 +50,19 @@ export const metadata: Metadata = {
     description: 'Crafting premium digital experiences with precision and elegance.',
     locale: 'en_US',
   },
+  // Full favicon set (ico/svg/png + apple touch + manifest) served as
+  // plain static files from public/ — declared explicitly here instead
+  // of via the app/favicon.ico file convention so every size/type gets
+  // its own <link>, not just a single default icon.
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({
@@ -84,6 +98,7 @@ export default function RootLayout({
           <ThemeProvider>
             <LenisProvider>
               <SkipLink />
+              <CustomCursor />
               {children}
             </LenisProvider>
           </ThemeProvider>

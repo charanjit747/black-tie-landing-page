@@ -1,26 +1,103 @@
 // ============================================================
 // _mobile-menu.scss — Full-screen premium mobile nav
-// Opened/closed via GSAP in MobileMenu.tsx (display + autoAlpha are
-// driven from JS — this file only owns layout/appearance).
+// Opened/closed by toggling the .mobile-menu--open class (see
+// MobileMenu.tsx) — every reveal here is a plain CSS transition, not
+// GSAP: the panel is always in the DOM at `display: flex`, with
+// `visibility`/`opacity` (not `display`) doing the actual show/hide, so
+// the close transition gets to play instead of the panel just vanishing.
+// `visibility`'s own transition-delay is what defers actually removing
+// it from hit-testing/AT until after that close transition finishes —
+// see &--open below.
 // ============================================================
 
 @use 'variables' as *;
 @use 'mixins' as *;
 
+// Shared timing for every child reveal below — kept as one shared
+// duration/ease rather than repeating it per element (they only differ
+// in `transition-delay` — see each element's own :nth-child/:nth-last-
+// child stagger rules for why it's not just one fixed number per item).
+// The overshoot bezier is the same "back" curve GSAP's back.out(1)
+// approximates, applied here to the links specifically — see &__link
+// below.
+$mobile-menu-ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94); // ~power2.out
+$mobile-menu-ease-back: cubic-bezier(0.34, 1.56, 0.64, 1); // ~back.out(1)
+
 .mobile-menu {
   position: fixed;
   inset: 0;
   z-index: $z-modal;
-  display: none; // toggled to flex by GSAP
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: $spacing-2xl;
-  padding: $spacing-2xl $spacing-xl;
-  overflow: hidden; // clips the strips while they're mid-slide
+  // Deliberately NOT the scroll container and NOT flex/centered itself
+  // any more — see .mobile-menu__scroll/__content below for why. This
+  // outer element just stays a plain, fixed, full-viewport box so `__bg`
+  // and `__close` (its direct children) stay correctly pinned to the
+  // whole screen regardless of how far the inner content is scrolled.
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  // Closing: let opacity fade immediately, but only actually flip
+  // `visibility` to hidden once the slowest child transition below (the
+  // reverse-staggered nav links) has had time to finish — the last one
+  // to start closing lands at up to ~0.2s delay + 0.3s duration = 0.5s.
+  transition:
+    opacity 0.3s ease,
+    visibility 0s linear 0.55s;
+
+  &--open {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    // Opening: no visibility delay needed — becomes interactive
+    // immediately, then its children animate in on their own delays.
+    transition: opacity 0.2s ease;
+  }
 
   @include respond-to('xl') {
     display: none !important; // desktop uses the inline nav instead
+  }
+
+  // ── Scroll container + centering ──────────────────────────
+  // Split from the outer `.mobile-menu` (see above) so the fixed
+  // backdrop/close button never scroll away from full viewport
+  // coverage. `margin: auto 0` on `__content` (not `justify-content:
+  // center` on this flex container) is what vertically centers the nav
+  // + actions when they're shorter than the screen while still leaving
+  // them fully scrollable when they're not — centering via
+  // justify-content on an overflowing flex container made its first
+  // child (the "Home" link) permanently unreachable: scrollTop can't go
+  // negative to reveal content that overflowed past the container's own
+  // start, and that's exactly what centering does when content is
+  // taller than the box. margin: auto only ever *adds* space, so it
+  // simply collapses to 0 the moment there's no room for it, at which
+  // point normal scrolling takes over with nothing lost.
+  &__scroll {
+    position: relative; // stacks above __bg (z-index: 0)
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 3rem $spacing-xl;
+    overflow-x: hidden; // clips the strips while they're mid-slide
+    overflow-y: auto;
+    // Scrollbar hidden but scrolling still fully works — this is a
+    // visual choice only, not a functionality removal.
+    scrollbar-width: none; // Firefox
+    -ms-overflow-style: none; // legacy Edge/IE
+
+    &::-webkit-scrollbar {
+      display: none; // Chrome/Safari/Chromium Edge
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-2xl;
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: auto;
   }
 
   // ── Background strips ─────────────────────────────────────
@@ -43,9 +120,41 @@
     bottom: 0;
     height: 100%;
     transform-origin: left center;
-    // Top→bottom version — swap this back in (and the matching scaleY
-    // tween in MobileMenu.tsx) to restore it.
-    // transform-origin: top center;
+    // Extends from its own left edge out to the right on open, one
+    // after another (see the per-strip nth-child stagger below).
+    transform: scaleX(1);
+    opacity: 1;
+    transition:
+      transform 0.26s $mobile-menu-ease-out,
+      opacity 0.26s $mobile-menu-ease-out;
+
+    .mobile-menu:not(.mobile-menu--open) & {
+      transform: scaleX(0);
+      opacity: 0;
+    }
+
+    // Staggered open, in DOM order (1st strip first) — and the exact
+    // mirror on close, in *reverse* order (last-opened strip retracts
+    // first), via :nth-last-child instead of repeating this with a
+    // reversed index. This is what a GSAP timeline's own .reverse()
+    // does for free (whatever animated in last is first to animate back
+    // out) and a same-both-ways delay does not — that was the "doesn't
+    // close as smoothly" bug: every strip used to wait out its own
+    // *opening* delay again before it could even start closing.
+    @for $i from 1 through 4 {
+      &:nth-child(#{$i}) {
+        .mobile-menu--open & {
+          transition-delay: #{($i - 1) * 0.08}s;
+        }
+      }
+
+      &:nth-last-child(#{$i}) {
+        .mobile-menu:not(.mobile-menu--open) & {
+          transition-delay: #{($i - 1) * 0.06}s;
+        }
+      }
+    }
+
     // Light theme keeps the subtle gradient (still theme-token driven);
     // dark theme is a flat solid — no gradient — per the exact color below.
     background-image: linear-gradient(
@@ -72,7 +181,13 @@
 
   &__close {
     position: absolute;
-    z-index: 1;
+    // Higher than __scroll's own z-index: 1 — __scroll is a later
+    // sibling in the DOM spanning the full viewport (height: 100%), so
+    // at equal z-index it would win hit-testing over this even though
+    // the close icon still visually shows through underneath it (no
+    // background of its own) — clicks landed on __scroll instead of
+    // this button.
+    z-index: 2;
     top: $spacing-lg;
     right: $spacing-lg;
     @include flex-center;
@@ -82,7 +197,20 @@
     background: var(--color-bg-tertiary);
     border: 1px solid var(--color-border);
     color: var(--color-text-primary);
-    @include smooth-transition;
+    opacity: 1;
+    // Fades in shortly after the strips start on open; fades straight
+    // out with no delay on close (it's the one piece with a fixed,
+    // non-staggered delay — a single button, nothing to stagger).
+    transition:
+      background-color $transition-base,
+      color $transition-base,
+      transform $transition-base,
+      opacity 0.15s ease 0.06s;
+
+    .mobile-menu:not(.mobile-menu--open) & {
+      opacity: 0;
+      transition-delay: 0s;
+    }
 
     &:hover {
       background: var(--color-border);
@@ -110,9 +238,43 @@
     color: var(--color-text-primary);
     text-decoration: none;
     line-height: 1.15;
+    // 0.85 (not 1) is this link's own resting/idle dim, same look it
+    // already had once landed — hover/active brighten it further below.
+    // Slides in from the left with a slight overshoot on open (each
+    // link's own stagger comes from the :nth-child/:nth-last-child rules
+    // below).
     opacity: 0.85;
+    transform: translateX(0);
     will-change: transform, opacity;
-    @include smooth-transition(opacity, $transition-fast);
+    transition:
+      opacity 0.3s $mobile-menu-ease-back,
+      transform 0.3s $mobile-menu-ease-back,
+      color $transition-fast;
+
+    .mobile-menu:not(.mobile-menu--open) & {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    // Same reverse-on-close approach as .mobile-menu__bg-strip above:
+    // staggered in on open (after a base delay that lets the strips land
+    // first), staggered out in *reverse* order on close — the
+    // last-opened link is the first to slide back out, with no need to
+    // wait for the strips again since they're already retracting behind
+    // it — and quicker than the open stagger, so closing doesn't drag.
+    @for $i from 1 through 8 {
+      &:nth-child(#{$i}) {
+        .mobile-menu--open & {
+          transition-delay: #{0.32 + ($i - 1) * 0.08}s;
+        }
+      }
+
+      &:nth-last-child(#{$i}) {
+        .mobile-menu:not(.mobile-menu--open) & {
+          transition-delay: #{($i - 1) * 0.05}s;
+        }
+      }
+    }
 
     &:hover,
     &--active {
@@ -130,6 +292,20 @@
     gap: $spacing-md;
     width: 100%;
     max-width: 340px;
+    // Last piece to land, once the links above are mostly done staggering
+    // in (their own delays are set via the :nth-child rules above); first
+    // piece to go on close, with no delay of its own.
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity 0.3s $mobile-menu-ease-out 0.7s,
+      transform 0.3s $mobile-menu-ease-out 0.7s;
+
+    .mobile-menu:not(.mobile-menu--open) & {
+      opacity: 0;
+      transform: translateY(20px);
+      transition-delay: 0s;
+    }
 
     .btn-common {
       width: 100%;

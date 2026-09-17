@@ -14,6 +14,9 @@ import { initPartnersMarqueeAnimation } from '@/utils/gsapAnimations';
 // (Figma builds it via a CSS mask, recoloring per theme), not a
 // naturally-colored logo, so it alone gets the `--mono` treatment —
 // see .partners__logo--mono in _partners.scss. ──────────────────────
+// TEMPORARY: still local — partners/ 403s on the CDN (S3 AccessDenied)
+// as of this migration pass. Swap back to `${ASSETS_BASE_URL}/partners/...`
+// once that's fixed.
 const PARTNERS = [
   { name: 'Blockly', src: '/assets/partners/blockly.png', width: 256, height: 70 },
   { name: 'Architect', src: '/assets/partners/architect.png', width: 287, height: 70 },
@@ -48,7 +51,7 @@ export const Partners: React.FC = () => {
   }, []);
 
   return (
-    <section className="partners">
+    <section id="partners" className="partners">
       <SectionBackgroundLines />
       <Container>
         <div className="partners__header">

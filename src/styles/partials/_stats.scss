@@ -53,6 +53,9 @@
 .stats__glow {
   position: absolute;
   inset: 0;
+  // TEMPORARY: local — stats/ 403s on the CDN (S3 AccessDenied) as of
+  // this migration pass. Swap back to url('#{$cdn-base}/stats/...') once
+  // that's fixed.
   background-image: url('/assets/stats/glow-light.jpg');
   background-position: center;
   background-size: cover;

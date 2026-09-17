@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Container from 'react-bootstrap/Container';
 import { ArrowUpRightIcon } from '@/constants/icons';
+import { getLenis } from '@/providers/LenisProvider';
 import {
   createHowItWorksInteraction,
   createHowItWorksHoverStripe,
@@ -16,6 +17,10 @@ import {
 // same asset, just shown larger — exported straight from Figma. `desc`
 // is the real hidden description line, pulled from each row's own
 // "hover" component variant in Figma (Property 1=Frame 22..28).
+//
+// TEMPORARY: still local, not on the CDN — how-it-works/ 403s there
+// (S3 AccessDenied) as of this migration pass. Swap back to
+// `${ASSETS_BASE_URL}/how-it-works/...` once that's fixed.
 const STEPS = [
   {
     index: '01',
@@ -87,34 +92,49 @@ export const HowItWorks: React.FC = () => {
   // The whole hover/popout/scroll-tracking interaction is desktop-only —
   // see $bp-desktop-sm in _variables.scss. Below it the CSS side already
   // hides the thumb/preview/stripe and shows the description permanently
-  // (a plain, always-visible layout, per the request), but the JS side
-  // still needs its own gate: without it, resizing a desktop window
-  // narrower would leave stale mouse handlers armed even though nothing
-  // for them to animate is visible any more. `isInteractive` starts true
-  // (matches the default/SSR-safe desktop assumption) and is corrected
-  // by the matchMedia listener below on mount and on resize.
+  // (a plain, always-visible layout, per the request), and the GSAP side
+  // now matches that exactly: createHowItWorksInteraction/
+  // createHowItWorksHoverStripe (each of which makes its own gsap.set/
+  // gsap.to calls the moment it's created) are only ever created while
+  // this matches, and destroyed the instant it stops — not just gated
+  // by isInteractiveRef at the call-site, which would still have left
+  // both objects (and their initial gsap.set calls) alive below 1280.
+  // `isInteractive` starts true (matches the default/SSR-safe desktop
+  // assumption) and is corrected by the matchMedia listener below on
+  // mount and on resize.
   const isInteractiveRef = useRef(true);
 
   useEffect(() => {
     const mql = window.matchMedia(`(min-width: ${DESKTOP_INTERACTION_BREAKPOINT}px)`);
-    const update = () => {
+
+    const sync = () => {
       isInteractiveRef.current = mql.matches;
+
+      if (mql.matches) {
+        if (previewRef.current && !interactionRef.current) {
+          interactionRef.current = createHowItWorksInteraction(previewRef.current);
+        }
+        if (stripeRef.current && !stripeInteractionRef.current) {
+          stripeInteractionRef.current = createHowItWorksHoverStripe(stripeRef.current);
+        }
+      } else {
+        interactionRef.current?.destroy();
+        interactionRef.current = null;
+        stripeInteractionRef.current?.destroy();
+        stripeInteractionRef.current = null;
+      }
     };
-    update();
-    mql.addEventListener('change', update);
-    return () => mql.removeEventListener('change', update);
-  }, []);
 
-  useEffect(() => {
-    if (!previewRef.current) return;
-    interactionRef.current = createHowItWorksInteraction(previewRef.current);
-    return () => interactionRef.current?.destroy();
-  }, []);
+    sync();
+    mql.addEventListener('change', sync);
 
-  useEffect(() => {
-    if (!stripeRef.current) return;
-    stripeInteractionRef.current = createHowItWorksHoverStripe(stripeRef.current);
-    return () => stripeInteractionRef.current?.destroy();
+    return () => {
+      mql.removeEventListener('change', sync);
+      interactionRef.current?.destroy();
+      interactionRef.current = null;
+      stripeInteractionRef.current?.destroy();
+      stripeInteractionRef.current = null;
+    };
   }, []);
 
   // Browsers only recompute which element is "hovered" on an actual mouse
@@ -140,9 +160,10 @@ export const HowItWorks: React.FC = () => {
   // only while a row is actually active) and never touches any
   // mouse-event handler, so it can't interfere with the cursor-follow.
   useEffect(() => {
-    let rafId: number;
-
-    const tick = () => {
+    // Shared by both triggers below — kept as one function so a fast
+    // scroll is checked from two independent clocks instead of relying
+    // on either alone.
+    const checkStillActive = () => {
       // Covers resizing the window from desktop-width down past the
       // interaction breakpoint while a row happened to be mid-hover —
       // clears it immediately rather than leaving it tracked against a
@@ -150,9 +171,9 @@ export const HowItWorks: React.FC = () => {
       if (!isInteractiveRef.current) {
         const index = activeRowIndexRef.current;
         const row = index === null ? null : rowRefs.current[index];
-        if (row) interactionRef.current?.deactivate(row);
+        if (row) interactionRef.current?.deactivateRow(row);
+        interactionRef.current?.hidePreview();
         activeRowIndexRef.current = null;
-        rafId = requestAnimationFrame(tick);
         return;
       }
 
@@ -160,22 +181,57 @@ export const HowItWorks: React.FC = () => {
       const row = index === null ? null : rowRefs.current[index];
 
       if (row) {
-        const rect = row.getBoundingClientRect();
         const { x, y } = lastClientPosRef.current;
+
+        // Has the frozen cursor point scrolled outside the *whole list*
+        // (not just this one row)? A fast/flung scroll is exactly the
+        // case where the active row can end up far away in a single
+        // frame, and this catches that without depending on the row's
+        // own rect lining up right.
+        const listRect = listRef.current?.getBoundingClientRect();
+        const outsideList =
+          !!listRect &&
+          (x < listRect.left || x > listRect.right || y < listRect.top || y > listRect.bottom);
+
+        const rect = row.getBoundingClientRect();
         const stillUnderCursor =
-          x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+          !outsideList &&
+          x >= rect.left &&
+          x <= rect.right &&
+          y >= rect.top &&
+          y <= rect.bottom;
 
         if (!stillUnderCursor) {
-          interactionRef.current?.deactivate(row);
+          interactionRef.current?.deactivateRow(row);
+          interactionRef.current?.hidePreview();
           activeRowIndexRef.current = null;
         }
       }
-
-      rafId = requestAnimationFrame(tick);
     };
 
+    let rafId: number;
+    const tick = () => {
+      checkStillActive();
+      rafId = requestAnimationFrame(tick);
+    };
     rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
+
+    // Belt-and-suspenders: also re-run the exact same check on Lenis's
+    // own scroll tick (see LenisProvider), not just the plain rAF loop
+    // above. The two run on the same underlying clock in practice, but
+    // a fast/flung scroll is precisely the case where a browser can
+    // favor compositor-only scrolling for a stretch and deprioritize an
+    // independent rAF callback — Lenis's callback fires exactly when it
+    // actually moves scroll position, so tying the check to it too
+    // closes that gap instead of only ever catching up once the fling
+    // fully settles.
+    const lenis = getLenis();
+    lenis?.on('scroll', checkStillActive);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis?.off('scroll', checkStillActive);
+    };
   }, []);
 
   // Coordinates relative to .how-it-works__list, not the viewport — the
@@ -191,13 +247,34 @@ export const HowItWorks: React.FC = () => {
 
   const handleMouseEnter = (index: number, image: string) => (e: React.MouseEvent) => {
     if (!isInteractiveRef.current) return;
+
+    // Entering a row never re-fires the shared preview's own show tween
+    // (see showPreview/hidePreview in createHowItWorksInteraction) —
+    // only that row's own thumb/text/desc. That's deliberate: the
+    // preview's visibility is driven solely by entering/leaving the
+    // *list* as a whole (see handleListMouseLeave below), a single on/
+    // off instead of one show+hide pair per row switch. Continuously
+    // hovering across several rows fast used to queue up many
+    // alternating show/hide tweens on that one shared element, and
+    // depending on which pair landed last, it could settle stuck fully
+    // visible with no further event left to correct it — reproducible
+    // with no scrolling involved at all. This removes that race outright
+    // rather than trying to out-guess its timing.
+    const previousIndex = activeRowIndexRef.current;
+    if (previousIndex !== null && previousIndex !== index) {
+      const previousRow = rowRefs.current[previousIndex];
+      if (previousRow) interactionRef.current?.deactivateRow(previousRow);
+    }
+
+    const wasAlreadyShown = previousIndex !== null;
     setActiveImage(image);
     activeRowIndexRef.current = index;
     lastClientPosRef.current = { x: e.clientX, y: e.clientY };
     const { x, y } = toListCoords(e);
     interactionRef.current?.moveTo(x, y);
+    if (!wasAlreadyShown) interactionRef.current?.showPreview();
     const row = rowRefs.current[index];
-    if (row) interactionRef.current?.activate(row);
+    if (row) interactionRef.current?.activateRow(row);
     if (row && listRef.current) stripeInteractionRef.current?.moveToRow(row, listRef.current);
   };
 
@@ -210,21 +287,23 @@ export const HowItWorks: React.FC = () => {
 
   const handleMouseLeave = (index: number) => () => {
     if (!isInteractiveRef.current) return;
-    if (activeRowIndexRef.current === index) activeRowIndexRef.current = null;
     const row = rowRefs.current[index];
-    if (row) interactionRef.current?.deactivate(row);
+    if (row) interactionRef.current?.deactivateRow(row);
   };
 
-  // Only fades the stripe out once the cursor leaves the whole list —
-  // moving between adjacent rows re-targets it instead (see
-  // handleMouseEnter), which is what makes it glide rather than flicker.
+  // Hides the shared preview and the stripe once the cursor leaves the
+  // whole list — moving between adjacent rows never touches either (see
+  // handleMouseEnter), which is what makes both glide rather than
+  // flicker on every row switch.
   const handleListMouseLeave = () => {
     if (!isInteractiveRef.current) return;
+    activeRowIndexRef.current = null;
+    interactionRef.current?.hidePreview();
     stripeInteractionRef.current?.hide();
   };
 
   return (
-    <section className="how-it-works">
+    <section id="how-it-works" className="how-it-works">
       <Container>
         <div className="how-it-works__header">
           <span className="how-it-works__tag">

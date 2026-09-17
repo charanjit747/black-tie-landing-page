@@ -12,8 +12,9 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
-      // Add external image domains here, e.g.:
-      // { protocol: 'https', hostname: 'images.unsplash.com' },
+      // All static assets (see src/constants/cdn.ts) now serve from here
+      // instead of public/assets/.
+      { protocol: 'https', hostname: 'd354qrbjihw1mn.cloudfront.net' },
     ],
   },
 

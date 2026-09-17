@@ -5,22 +5,31 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Container from 'react-bootstrap/Container';
 import { SocialLinkArrowIcon } from '@/constants/icons';
+import { getLenis } from '@/providers/LenisProvider';
 
 // ── Config ───────────────────────────────────────────────────
+// Home/FAQs/Marketplace/Partner with us are in-page anchors to the
+// matching homepage section — same sections, same ids, as the header's
+// own nav (see NAV_LINKS in Header.tsx: Home→Hero, Marketplace→
+// Ecosystem, Partner with us→Our Partners, FAQs→FAQ). There's no
+// standalone /faqs, /marketplace, or /partner route in this app, so
+// these used to 404. "About" is the one real, separate page (see
+// src/app/(Pages)/about), so it keeps a plain href.
 const NAV_LINKS = [
-  { label: 'Home', href: '/' },
+  { label: 'Home', href: '#home' },
   { label: 'About', href: '/about' },
-  { label: 'FAQs', href: '/faqs' },
-  { label: 'Marketplace', href: '/marketplace' },
-  { label: 'Partner with us', href: '/partner' },
+  { label: 'FAQs', href: '#faq' },
+  { label: 'Marketplace', href: '#ecosystem' },
+  { label: 'Partner with us', href: '#partners' },
 ] as const;
 
+// href is '#' for both — no real Privacy Policy/Terms pages to link to yet.
 const LEGAL_LINKS = [
-  { label: 'Privacy Policy', href: '/privacy' },
+  { label: 'Privacy Policy', href: '#' },
   // "Glassay" is how Figma's own copy spells it — reproduced verbatim
   // rather than silently "corrected", same as this page's other
   // copy blocks throughout (e.g. FAQ).
-  { label: 'Glassay of terms', href: '/terms' },
+  { label: 'Glassay of terms', href: '#' },
 ] as const;
 
 // Brand colors are literal per platform, not theme tokens — Figma uses
@@ -32,12 +41,13 @@ interface SocialLink {
   gradient?: boolean;
 }
 
+// href is '#' for every one — no real social profiles to link to yet.
 const SOCIALS: SocialLink[] = [
-  { label: 'Twitter', href: 'https://twitter.com', color: '#39bfe6' },
-  { label: 'Facebook', href: 'https://facebook.com', color: '#1877f2' },
-  { label: 'Instagram', href: 'https://instagram.com', gradient: true },
-  { label: 'Linkedin', href: 'https://linkedin.com', color: '#0077d3' },
-  { label: 'You tube', href: 'https://youtube.com', color: '#ff0002' },
+  { label: 'Twitter', href: '#', color: '#39bfe6' },
+  { label: 'Facebook', href: '#', color: '#1877f2' },
+  { label: 'Instagram', href: '#', gradient: true },
+  { label: 'Linkedin', href: '#', color: '#0077d3' },
+  { label: 'You tube', href: '#', color: '#ff0002' },
 ];
 
 // ── Component ────────────────────────────────────────────────
@@ -46,7 +56,31 @@ const SOCIALS: SocialLink[] = [
 // and shows up on every page (see src/components/layout/MainLayout.tsx).
 export const Footer: React.FC = () => {
   const pathname = usePathname();
+  const isHome = pathname === '/';
   const currentYear = new Date().getFullYear();
+
+  // Same smooth-scroll-to-section approach as the header (see
+  // scrollToSection in Header.tsx) — off-page (not on "/"), this is a
+  // no-op and the <Link> falls through to a normal Next navigation to
+  // "/#id" instead. Only one <header> ever exists on the page, so
+  // there's no need for the header's own ref to it here.
+  const scrollToSection = (e: React.MouseEvent, href: string) => {
+    if (!isHome || !href.startsWith('#')) return;
+
+    const target = document.getElementById(href.slice(1));
+    if (!target) return;
+
+    e.preventDefault();
+
+    const headerOffset = (document.querySelector('header')?.clientHeight ?? 0) + 16;
+    const lenis = getLenis();
+    if (lenis) {
+      lenis.scrollTo(target, { offset: -headerOffset });
+    } else {
+      const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
 
   return (
     <footer className="site-footer" role="contentinfo">
@@ -105,21 +139,32 @@ export const Footer: React.FC = () => {
         <div className="site-footer__middle">
           <nav className="site-footer__nav" aria-label="Footer">
             <ul className="site-footer__nav-list">
-              {NAV_LINKS.map(({ label, href }) => (
-                <li key={href}>
-                  {/* aria-current stays for assistive tech even though the
-                      underline Figma shows on "Home" is only a hover-state
-                      reference, not a permanent current-page style — every
-                      link looks the same at rest, underlining only on hover. */}
-                  <Link href={href} aria-current={pathname === href ? 'page' : undefined}>
-                    {label}
-                  </Link>
-                </li>
-              ))}
+              {NAV_LINKS.map(({ label, href }) => {
+                // Anchor links resolve against "/" when off-page (same as
+                // the header); "/about" is a real route and passes through
+                // unchanged.
+                const resolvedHref = href.startsWith('#') && !isHome ? `/${href}` : href;
+
+                return (
+                  <li key={href}>
+                    {/* aria-current stays for assistive tech even though the
+                        underline Figma shows on "Home" is only a hover-state
+                        reference, not a permanent current-page style — every
+                        link looks the same at rest, underlining only on hover. */}
+                    <Link
+                      href={resolvedHref}
+                      onClick={(e) => scrollToSection(e, href)}
+                      aria-current={pathname === href ? 'page' : undefined}
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
             <ul className="site-footer__nav-list">
               {LEGAL_LINKS.map(({ label, href }) => (
-                <li key={href}>
+                <li key={label}>
                   <Link href={href}>{label}</Link>
                 </li>
               ))}
