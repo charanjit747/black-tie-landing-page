@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Krona_One } from 'next/font/google';
 import { ReduxProvider } from '@/providers/ReduxProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
@@ -33,6 +33,21 @@ const kronaOne = Krona_One({
   variable: '--font-krona-one',
   display: 'swap',
 });
+
+// `shrinkToFit` (the property as given — "shrinkTooFit" was a typo) isn't
+// part of Next's typed Viewport at all (no such field in ViewportLayout);
+// it's not a real browser viewport property either, historically a
+// non-standard iOS Safari `<meta>` value. Left out entirely rather than
+// added under a misspelled/invalid key, which would fail the TypeScript
+// build (`Metadata`'s Viewport type only accepts width/height/
+// initialScale/minimumScale/maximumScale/userScalable/viewportFit/
+// interactiveWidget).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: {
