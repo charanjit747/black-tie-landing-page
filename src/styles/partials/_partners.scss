@@ -24,10 +24,18 @@
 
 .partners {
   position: relative; // anchors .section-bg-lines — see _background-lines.scss
-  padding: $spacing-3xl 0;
+  // padding-top is $spacing-3xl PLUS .partners__marquee's own 5rem
+  // padding below — that marquee padding stacks with this section's
+  // padding-bottom at the bottom edge (nothing sits between the
+  // marquee and the section's own bottom edge), but nothing equivalent
+  // adds to the top edge (the header sits directly below padding-top),
+  // so the top was reading visibly tighter than the bottom.
+  padding-top: calc(#{$spacing-3xl} + 5rem);
+  padding-bottom: $spacing-3xl;
 
   @include respond-below('md') {
-    padding: $spacing-2xl 0;
+    padding-top: calc(#{$spacing-2xl} + #{$spacing-xl});
+    padding-bottom: $spacing-2xl;
   }
 }
 

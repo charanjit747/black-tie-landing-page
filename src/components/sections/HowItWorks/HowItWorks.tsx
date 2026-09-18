@@ -13,10 +13,14 @@ import {
 } from '@/utils/gsapAnimations';
 
 // ── Steps Config (matches Figma: How It Works? For Investors) ──────────
-// Each step's thumbnail is also the big cursor-follow preview image —
-// same asset, just shown larger — exported straight from Figma. `desc`
-// is the real hidden description line, pulled from each row's own
-// "hover" component variant in Figma (Property 1=Frame 22..28).
+// `image` is the small row thumbnail (a plain flat screenshot crop).
+// `preview` is the big cursor-follow popout — a SEPARATE, per-row asset
+// pulled from Figma's own "Section-2" hover variants (Property 1=Frame
+// 22..28), each one a pre-composed, pre-tilted export (crop, 7.6° tilt
+// and drop shadow already baked into the pixels by the designer) rather
+// than a plain screenshot the app rotates itself — see
+// createHowItWorksInteraction in gsapAnimations.ts. `desc` is the real
+// hidden description line, pulled from those same variants.
 //
 // TEMPORARY: still local, not on the CDN — how-it-works/ 403s there
 // (S3 AccessDenied) as of this migration pass. Swap back to
@@ -27,42 +31,49 @@ const STEPS = [
     title: 'Register & Complete KYC/KYB',
     desc: 'Create your investor account and complete the verification process.',
     image: '/assets/how-it-works/step-1.png',
+    preview: '/assets/how-it-works/preview-1.png',
   },
   {
     index: '02',
     title: 'Admin Review & Approval',
     desc: 'Our Admin team reviews your application and activates your account upon approval.',
     image: '/assets/how-it-works/step-2.png',
+    preview: '/assets/how-it-works/preview-2.png',
   },
   {
     index: '03',
     title: 'Explore Tokenized Offerings',
     desc: 'Explore tokenized offerings and review their details before investing.',
     image: '/assets/how-it-works/step-3.png',
+    preview: '/assets/how-it-works/preview-3.png',
   },
   {
     index: '04',
     title: 'Subscribe to an Offering',
     desc: 'Choose an offering and submit your investment interest through the platform.',
     image: '/assets/how-it-works/step-4.png',
+    preview: '/assets/how-it-works/preview-4.png',
   },
   {
     index: '05',
     title: 'Wallet Whitelisting',
     desc: 'The Investment Manager reviews your request and whitelists your wallet address on-chain.',
     image: '/assets/how-it-works/step-5.png',
+    preview: '/assets/how-it-works/preview-5.png',
   },
   {
     index: '06',
     title: 'Make Your Investment',
     desc: 'Invest using the supported payment methods after confirming the investment details.',
     image: '/assets/how-it-works/step-6.png',
+    preview: '/assets/how-it-works/preview-6.png',
   },
   {
     index: '07',
     title: 'Token Issuance & Portfolio Management',
     desc: 'Tokens are issued to your approved wallet address, and your investor dashboard is updated in real time.',
     image: '/assets/how-it-works/step-7.png',
+    preview: '/assets/how-it-works/preview-7.png',
   },
 ] as const;
 
@@ -334,7 +345,7 @@ export const HowItWorks: React.FC = () => {
               ref={(el) => {
                 rowRefs.current[index] = el;
               }}
-              onMouseEnter={handleMouseEnter(index, step.image)}
+              onMouseEnter={handleMouseEnter(index, step.preview)}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave(index)}
             >

@@ -310,11 +310,18 @@
     flex-shrink: 0;
     pointer-events: none; // clicks still land on the parent <a>/<button>
     transition: background-color $transition-base;
-    // Static icon, no hover animation — just this background-color tint.
 
     svg {
       width: 16px;
       height: 15px;
+      // Simple "nudge forward" on hover (see &--attached:hover below) —
+      // the circle itself stays put, only the arrow glyph inside slides.
+      transition: transform $transition-fast;
+
+      @include respond-below('md') {
+        width: 13px;
+        height: 12px;
+      }
     }
   }
 
@@ -328,9 +335,21 @@
     color: var(--color-btn-secondary-text);
   }
 
+  // A distinct, more visible hover tone of its own — the shared
+  // --color-btn-secondary-hover token (used by every plain secondary
+  // button) is only a hair off from its own resting color, which read
+  // as barely-there here.
   &--attached:hover &__label,
   &--attached:hover &__icon-cap {
-    background-color: var(--color-btn-secondary-hover);
+    background-color: #d1d5db;
+
+    [data-theme='dark'] & {
+      background-color: #333333;
+    }
+  }
+
+  &--attached:hover &__icon-cap svg {
+    transform: translateX(2px);
   }
 }
 

@@ -98,11 +98,24 @@ $header-inset-top-narrow: 2.4rem;
   // A fixed dark background — literally the same #111827 already used
   // for --color-header-bg in the dark theme, hardcoded rather than read
   // from the CSS variable so it never changes with the light/dark
-  // toggle. Fully opaque, so no blur or shadow is needed here.
+  // toggle... except in dark theme, where a dark pill on an already-dark
+  // page read poorly — that one state flips to white instead (see the
+  // matching nav-link/logo/icon contrast overrides below).
+  // Shadow only while solid/sticky (never on the transparent hero
+  // state) — inverted per theme since the pill itself inverts: a dark
+  // pill (light theme) needs a normal dark shadow to lift off the page,
+  // a white pill (dark theme) needs a soft light shadow instead, or it
+  // would just be a dark smudge on an already-dark page.
   &--solid &__inner {
     background-color: #111827;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+
+    [data-theme='dark'] & {
+      background-color: #fff;
+      box-shadow: 0 8px 24px rgba(255, 255, 255, 0.18);
+    }
   }
 
   &__logo {
@@ -182,8 +195,10 @@ $header-inset-top-narrow: 2.4rem;
       font-size: $font-size-sm;
     }
 
+    // Plain text-color change on hover — no opacity fade, no background
+    // fill, just a muted light gray against the always-dark-navy bg.
     &:hover {
-      opacity: 0.75;
+      color: #d1d5db;
     }
 
     &--active {
@@ -267,6 +282,57 @@ $header-inset-top-narrow: 2.4rem;
 
     &:hover {
       background: rgba(255, 255, 255, 0.25);
+    }
+  }
+}
+// ── Solid + dark theme contrast fixes ─────────────────────────
+// Every color above (nav-link text, the logo PNG, the theme-toggle/
+// hamburger glass buttons, the ghost Referral pill) was written
+// assuming the header's background stays dark forever — true
+// everywhere except this one state, where &__inner above flips to
+// white. Without this, all of that would go invisible (white text/
+// icons/logo/glass-pill on a now-white pill).
+[data-theme='dark'] .site-header--solid {
+  .site-header__nav-link {
+    color: #111827;
+
+    // The base hover color (#d1d5db, a light gray) would barely show on
+    // this state's white background — a muted dark gray instead.
+    &:hover {
+      color: #6b7280;
+    }
+  }
+
+  // The logo file is a plain white PNG (transparent elsewhere) — this
+  // isn't a color swap, just flattening every opaque pixel to black.
+  .site-header__logo img {
+    filter: brightness(0);
+  }
+
+  .site-header__theme-toggle,
+  .site-header__hamburger {
+    background-color: rgba(17, 24, 39, 0.08);
+    border-color: rgba(17, 24, 39, 0.15);
+    color: #111827;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  // &--ghost (.site-header__referral) is a fixed white-glass-on-dark
+  // treatment everywhere else it's used (over hero video, the mobile
+  // menu's always-dark panel) — here alone the surface it sits on is
+  // now white too, so it needs the same light/dark flip as everything
+  // else in this block instead of its usual white glass.
+  .site-header__referral.btn-common--ghost {
+    background: rgba(17, 24, 39, 0.06);
+    border-color: rgba(17, 24, 39, 0.18);
+    color: #111827;
+
+    &:hover {
+      background: rgba(17, 24, 39, 0.1);
+      color: #111827;
     }
   }
 }

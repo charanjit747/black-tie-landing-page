@@ -10,12 +10,13 @@ import { initHeroAnimation } from '@/utils/gsapAnimations';
 
 // ── Ticker Config (matches Figma marquee row) ──────────────────
 // Each item opens its own product site in a new tab.
-// TODO: swap in the real destination URLs once they're available.
+// TODO: swap in the real destination URLs once they're available — no
+// real page to link to yet, so these are all just "#" placeholders.
 const TICKER_ITEMS = [
-  { label: 'BT Asset Hub',        href: '/asset-hub' },
-  { label: 'BT Treasury',         href: '/treasury' },
-  { label: 'BTX Markets',         href: '/markets' },
-  { label: 'BTSmart (BT Smart)',  href: '/smart' },
+  { label: 'BT Asset Hub',        href: '#' },
+  { label: 'BT Treasury',         href: '#' },
+  { label: 'BTX Markets',         href: '#' },
+  { label: 'BTSmart (BT Smart)',  href: '#' },
 ] as const;
 
 // ── Component ────────────────────────────────────────────────

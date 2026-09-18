@@ -150,12 +150,12 @@ export function createHowItWorksInteraction(preview: HTMLElement): HowItWorksInt
   const xTo = gsap.quickTo(preview, 'x', { duration: 0.6, ease: 'power3' });
   const yTo = gsap.quickTo(preview, 'y', { duration: 0.6, ease: 'power3' });
 
-  // Centered on the cursor point, hidden until the first hover, and
-  // given Figma's exact 7.6° tilt (confirmed identical across all 7 row
-  // variants) — kept in the same `gsap.set` as the x/y/scale so GSAP
-  // manages one composed transform throughout instead of a plain CSS
-  // `transform` getting silently overwritten by quickTo.
-  gsap.set(preview, { xPercent: -50, yPercent: -50, autoAlpha: 0, scale: 0.85, rotation: 7.6 });
+  // Centered on the cursor point, hidden until the first hover. No
+  // rotation here — each row's popout image (see STEPS.preview in
+  // HowItWorks.tsx) is now Figma's own pre-composed export, tilt and
+  // shadow already baked into the pixels, so rotating this container on
+  // top would double the tilt.
+  gsap.set(preview, { xPercent: -50, yPercent: -50, autoAlpha: 0, scale: 0.85 });
 
   const moveTo = (x: number, y: number) => {
     xTo(x);
@@ -825,6 +825,67 @@ export function initCustomCursorAnimation(ring: HTMLElement, dot: HTMLElement): 
       window.removeEventListener('mouseout', handleOut);
       document.documentElement.removeEventListener('mouseleave', handleLeaveWindow);
     };
+  });
+
+  return () => mm.revert();
+}
+
+// ────────────────────────────────────────────────────────────
+// Shared decorative background lines (SectionBackgroundLines) — each
+// of the 7 vertical dividers grows top-to-bottom, left to right, as
+// the section they belong to scrolls into view. Desktop-only, same
+// min-width: 1280px gate as everything else in this file — below it,
+// the lines are just permanently visible via plain CSS (see
+// _background-lines.scss), no gsap.* calls at all.
+// ────────────────────────────────────────────────────────────
+
+export function initSectionBackgroundLinesAnimation(lines: HTMLElement[]): () => void {
+  const mm = gsap.matchMedia();
+
+  mm.add('(min-width: 1280px)', () => {
+    const wrapper = lines[0].parentElement;
+    if (!wrapper) return;
+
+    gsap.set(lines, { scaleY: 0 });
+
+    // GSAP's *own* stagger + scrub, not a hand-rolled scroll→progress
+    // mapping — a genuine scrub tween is continuously re-synced to the
+    // current scroll position on every ScrollTrigger refresh (including
+    // right when this is created), so there's no "already in view on
+    // mount" case to special-case here the way a one-shot entrance
+    // animation needs; it just starts wherever the scroll position
+    // already puts it. `scrub: 1` gives the playhead its own inertia —
+    // it eases toward the scroll-derived target over ~1s instead of
+    // snapping to the raw scroll value every frame, which is what
+    // actually makes this read as smooth. `stagger` + `duration`
+    // together define ONE combined virtual timeline that scrub then
+    // maps across the whole start→end scroll range: each line spans
+    // duration / (duration + stagger*(count-1)) of that range, and
+    // consecutive lines overlap by (duration - stagger) of that same
+    // span — duration well over 2x the stagger here is what keeps a
+    // line still visibly growing when the next one starts, instead of
+    // a dead gap between them.
+    const tween = gsap.to(lines, {
+      scaleY: 1,
+      ease: 'none', // scrub already maps progress 1:1 to scroll — an eased curve would fight that
+      duration: 1,
+      stagger: 0.3,
+      scrollTrigger: {
+        trigger: wrapper,
+        // A moderate, fixed viewport-relative window centered on the
+        // middle of the screen — NOT 'top bottom' → 'top top' (the
+        // section's entire transit across the full page height), which
+        // made the first couple of lines finish while the section's
+        // top was still far below center. 80%→20% is symmetric around
+        // 'top 50%' (dead center), and stays a sane ~60% of one
+        // viewport-height regardless of how tall the section itself is.
+        start: 'top 80%',
+        end: 'top 20%',
+        scrub: 1,
+      },
+    });
+
+    return () => tween.scrollTrigger?.kill();
   });
 
   return () => mm.revert();

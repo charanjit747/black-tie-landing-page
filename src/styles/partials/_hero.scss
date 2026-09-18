@@ -39,6 +39,39 @@
   @include respond-below('narrow-desktop') {
     min-height: clamp(calc(480px + 10rem), calc(85vh + 10rem), calc(730px + 10rem));
   }
+
+  // Mobile: 92vh made the card far taller than its own content needs
+  // (tag/headline/CTA/ticker), leaving a large empty stretch of pure
+  // background art with nothing in it. A shorter, tighter clamp here
+  // keeps the card proportionate to what's actually inside it.
+  @include respond-below('md') {
+    // Bumped from 500/72vh/680 — the 2-row ticker grid plus the CTA
+    // needed more room than that left, and since content is centered
+    // (not bottom-aligned) any shortfall clips evenly off both the top
+    // and bottom against the card's own `overflow: hidden`, cropping
+    // the second ticker row.
+    min-height: clamp(600px, 82vh, 750px);
+
+    // A bottom-anchored contrast scrim behind the content — the busy
+    // background art has no reliable dark region of its own to sit
+    // text on, so this darkens the lower portion the content actually
+    // occupies, fading to nothing above so the art still shows through
+    // higher up.
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.45) 35%,
+        rgba(0, 0, 0, 0.1) 65%,
+        transparent 85%
+      );
+      pointer-events: none;
+    }
+  }
 }
 
 // ── Background video ───────────────────────────────────────
@@ -73,7 +106,9 @@
 
   @include respond-below('md') {
     padding-top: 8.8rem; // 1rem = 10px
+    justify-content: flex-end;
     gap: $spacing-xl;
+    padding-bottom: 3.2rem;
   }
 }
 
@@ -122,6 +157,16 @@
   @include respond-below('sm') {
     font-size: $font-size-sm;
     padding: $spacing-xs $spacing-lg;
+  }
+
+  // A true stadium radius ($radius-full) only looks right on a single
+  // line — once the copy wraps to two lines at this width, the same
+  // radius stretches into an odd bulging capsule around the wrapped
+  // text instead of a clean pill. A normal rounded-rectangle radius
+  // reads correctly at any number of lines.
+  @include respond-below('md') {
+    border-radius: $radius-xl;
+    text-align: center;
   }
 }
 
@@ -178,10 +223,13 @@
 // the lobes' own hover tint lives in _button.scss alongside the shape).
 
 // ── Ticker row ───────────────────────────────────────────────
-// One row of 4 on tablet/desktop; on mobile it breaks into a 2×2 grid
-// with a smaller font instead of cramming 4 across a narrow screen.
-// Horizontal gutter/max-width comes from the shared `.container` class
-// (see _reset.scss), same as .hero__content above.
+// One row of 4 on tablet/desktop. On mobile: no dividers, no boxes, no
+// grid — just a plain wrapping inline row of links, each sized to its
+// own label, flowing left-to-right and wrapping onto a new line
+// naturally if they don't all fit (like a simple nav list), with
+// nothing else claiming a fixed width or shape. Horizontal gutter/
+// max-width comes from the shared `.container` class (see _reset.scss),
+// same as .hero__content above.
 .hero__ticker {
   position: relative;
   z-index: 1;
@@ -195,14 +243,14 @@
   }
 
   @include respond-below('md') {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0 $spacing-lg;
-  }
-
-  // Below 480px even 2 columns feels cramped — single column instead.
-  @media (max-width: 479px) {
-    grid-template-columns: 1fr;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem 2rem;
+    // One divider above the whole row now (not per-item — see
+    // .hero__ticker-item's own border-top removed below), separating
+    // the ticker as a group from the CTA above it.
+    padding-top: $spacing-lg;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
   }
 }
 
@@ -236,8 +284,14 @@
     flex: none;
     min-width: 0;
     gap: $spacing-xs;
-    padding: $spacing-sm $spacing-xs;
-    font-size: clamp(1.2rem, 3.2vw, 1.5rem); // 12px–15px (1rem = 10px)
+    padding: 0;
+    border-top: none;
+    font-size: 1.3rem; // 13px (1rem = 10px)
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
   }
 
   &:hover {

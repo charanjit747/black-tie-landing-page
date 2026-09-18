@@ -194,6 +194,13 @@
   border: 1px solid #c7c7c7 !important;
   box-shadow: none !important;
 
+  // Below 1280px — smaller so it doesn't read as oversized once the
+  // layout stacks single-column on tablet/mobile.
+  @include respond-below('desktop-sm') {
+    height: 5rem !important;
+    font-size: 1.6rem !important;
+  }
+
   &::placeholder {
     color: #585959 !important;
     opacity: 1 !important;
@@ -261,6 +268,12 @@
   background-color: #1d1d1d;
   border-color: #1d1d1d;
   color: #fefefe;
+
+  // Matches .join-community__input's own breakpoint above.
+  @include respond-below('desktop-sm') {
+    height: 5rem;
+    font-size: 1.6rem;
+  }
 
   &:hover {
     background-color: #000;

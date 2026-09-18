@@ -269,7 +269,9 @@
     color: var(--color-input-text) !important;
     font-family: $font-family-base !important;
     font-size: 0.95rem !important;
-    padding-left: 95px !important;
+    // Matches .flag-dropdown's own width below — 1rem clear on each
+    // side of the divider before the digits start.
+    padding-left: 82px !important;
     @include smooth-transition(border-color box-shadow, $transition-fast);
 
     &::placeholder {
@@ -285,22 +287,28 @@
 
   // Country Code Dropdown Container
   .flag-dropdown {
+    // Exactly matches .form-control's padding-left above — reserving
+    // the same zone the phone number text starts right after: flag +
+    // arrow + a 1rem gap + the divider + another 1rem gap.
+    width: 82px !important;
     background-color: transparent !important;
     border: none !important;
     border-radius: 9999px 0 0 9999px !important;
-    padding-left: 0.75rem !important;
+    // More than %input-base's own 1.5rem — the flag icon itself reads
+    // visually "lighter" than plain text at the same inset, so it
+    // needs extra room to actually look aligned with other fields.
+    padding-left: 2.4rem !important;
     display: flex !important;
     align-items: center !important;
 
-    // Vertical Divider Line (|)
+    // Vertical Divider Line (|) — exactly 1rem clear on both sides,
+    // not flush and not auto-centered.
     &::after {
       content: '';
-      display: inline-block;
       width: 1px;
       height: 22px;
       background-color: var(--color-input-border);
-      margin-left: 0.5rem;
-      margin-right: 0.5rem;
+      margin: 0 1rem;
     }
   }
 
@@ -330,6 +338,79 @@
     color: var(--color-text-primary) !important;
     padding: 0.5rem !important;
     margin-top: 8px !important;
+    // Scrolling itself stays fully functional — only the visual
+    // scrollbar the library's default CSS draws is hidden, same
+    // treatment used for the mobile menu's own scroll area.
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+
+    &::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    // Search box (enableSearch) — targeted structurally by
+    // `input[type='search']` rather than the library's own generated
+    // class name (its `searchClass` prop gets run through an internal
+    // classnames() helper whose exact output isn't reliably guessable
+    // from the minified bundle, and every attempt at guessing it here
+    // silently matched nothing). `type="search"` is a literal, fixed
+    // attribute the library always sets on this one input — it can't
+    // drift. Its `<li>` wrapper (always the list's first child when
+    // enableSearch is on) is unstyled — every bit of layout (sticky,
+    // full width, background) lives directly on the input below.
+    > li:first-child {
+      background: transparent !important;
+      padding: 0 !important;
+      margin: 0.2rem 0 0.8rem !important;
+    }
+
+    input[type='search'] {
+      // WebKit/Chrome give a type="search" input its own native OS-level
+      // widget appearance (a forced white background baked into the
+      // native rendering), which silently wins over `background-color`
+      // no matter how it's authored. Resetting appearance to plain
+      // `none` first is what actually lets our own background/border/
+      // radius show at all.
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      // Sticky at the top of the list, over its own scroll area (see
+      // `data-lenis-prevent` in FormikPhoneInput.tsx) — pinned and kept
+      // opaque here directly, not on the <li> wrapper, so scrolled-past
+      // rows can never show through it.
+      position: sticky !important;
+      top: 0.2rem !important;
+      z-index: 1 !important;
+      display: block !important;
+      width: 100% !important;
+      height: 4rem !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      // Left/right 1.5rem matches the standard pill input's own
+      // padding convention (%input-base above) instead of a bespoke
+      // tighter value — same left gap every other text field on the
+      // site uses.
+      padding: 0 1.5rem !important;
+      // Lighter than the standard input border (var(--color-input-border))
+      // on purpose — 1px var(--color-border) instead of 1.5px.
+      border: 1px solid var(--color-border) !important;
+      border-radius: 9999px !important;
+      background-color: var(--color-input-bg) !important;
+      color: var(--color-input-text) !important;
+      font-family: $font-family-base !important;
+      font-size: $font-size-sm !important;
+      outline: none !important;
+
+      &::placeholder {
+        color: var(--color-input-placeholder) !important;
+      }
+
+      // Deliberately no focus ring/border-color change here — stays the
+      // same light border always, unlike the standard form inputs.
+      &:focus {
+        border-color: var(--color-border) !important;
+        box-shadow: none !important;
+      }
+    }
 
     .country {
       border-radius: 12px !important;

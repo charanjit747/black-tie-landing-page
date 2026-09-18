@@ -384,14 +384,15 @@
   position: absolute;
   top: 0;
   left: 0;
-  // Figma's per-row popout varies slightly (~486–496px × ~317–324px
-  // once unrotated); 49rem × 32rem is the representative average for
-  // this one shared element.
+  // Figma's per-row popout varies slightly (~486–496px × ~317–324px);
+  // 49rem × 32rem is the representative average for this one shared
+  // element. No radius/border/shadow here — each row's own preview
+  // image (see STEPS.preview in HowItWorks.tsx) is Figma's pre-composed
+  // export with the tilt, drop shadow and any frame border already
+  // baked into its pixels (transparent elsewhere), not a plain
+  // rectangular crop this container needs to style itself.
   width: 49rem; // ~490px
   height: 32rem; // ~320px
-  // No radius here either — matches the thumbnail, a plain rectangular
-  // crop, just scaled up (Figma gives it a 7.6° tilt instead — see the
-  // `rotation` set alongside x/y in createHowItWorksInteraction).
   border-radius: 0;
 
   // Global small-desktop size-down — see $bp-narrow-desktop.
@@ -399,7 +400,6 @@
     width: 37rem;
     height: 24rem;
   }
-  overflow: hidden;
   pointer-events: none;
   // $z-tooltip (600) sits ABOVE $z-sticky (200, the fixed header) — the
   // popout was floating over the header on rows near the top of the
@@ -408,14 +408,6 @@
   // safely under the header.
   z-index: $z-raised;
   opacity: 0; // matches the GSAP-set initial state as a no-JS fallback
-  box-shadow: var(--shadow-dropdown);
-  // Figma: no border in Home-Light, a ~3.6px --color-border frame in
-  // Home-Dark (the image needs a visible edge against the dark bg).
-  border: 0 solid var(--color-border);
-
-  [data-theme='dark'] & {
-    border-width: 0.36rem;
-  }
 
   // The whole hover interaction is desktop-only — see $bp-desktop-sm.
   @include respond-below('desktop-sm') {
@@ -436,5 +428,9 @@
 }
 
 .how-it-works__preview-img {
-  object-fit: cover;
+  // contain, not cover — each preview is now Figma's own pre-tilted
+  // export (irregular silhouette on a transparent background, not a
+  // plain rectangular screenshot), so cropping it via `cover` would
+  // slice off the tilted corners instead of showing the whole graphic.
+  object-fit: contain;
 }

@@ -268,8 +268,23 @@
   resize: none;
 }
 
+// Below 1280px — smaller single-line fields (not the textarea, which
+// keeps its own multi-line height above) so they don't read as
+// oversized once the layout stacks single-column on tablet/mobile.
+@include respond-below('desktop-sm') {
+  .contact-us__fields .form-input,
+  .contact-us__fields .react-tel-input .form-control {
+    height: 5rem !important;
+    font-size: 1.6rem !important;
+  }
+}
+
 .contact-us__fields .react-tel-input .form-control {
-  padding-left: 8.5rem !important;
+  // Matches _forms.scss's own .form-control padding-left/.flag-dropdown
+  // width (82px/8.2rem) — this overrides it, so it must stay in sync
+  // whenever that value changes or the fix never actually shows up on
+  // this page.
+  padding-left: 8.2rem !important;
 }
 
 // _forms.scss defines a `.react-tel-input--error` class on the phone
@@ -305,6 +320,12 @@
   background-color: #1d1d1d;
   border-color: #1d1d1d;
   color: #fefefe;
+
+  // Matches the fields' own breakpoint above.
+  @include respond-below('desktop-sm') {
+    height: 5rem;
+    font-size: 1.6rem;
+  }
 
   &:hover {
     background-color: #000;

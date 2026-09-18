@@ -21,26 +21,28 @@
   --color-text-secondary: #374151;
   --color-text-muted:     #6b7280;
   --color-text-inverse:   #ffffff;
-  --color-text-link:      #c9a84c;
-  --color-text-link-hover: #a8873a;
+  --color-text-link:      #0a0a0a;
+  --color-text-link-hover: #374151;
 
-  // Brand
+  // Brand — no separate accent hue in Figma, the brand is strictly
+  // black/white, so "accent" reuses the same primary-button black/white
+  // pair every other CTA on the site already uses.
   --color-brand-primary:  #1a1a2e;
-  --color-brand-accent:   #c9a84c;
-  --color-brand-accent-light: #e2c472;
+  --color-brand-accent:   #181818;
+  --color-brand-accent-light: #4b5563;
 
   // Borders
   --color-border:         #e5e7eb;
   --color-border-strong:  #d1d5db;
-  --color-border-focus:   #c9a84c;
+  --color-border-focus:   #0a0a0a;
 
   // Inputs
   --color-input-bg:       #ffffff;
   --color-input-border:   #d1d5db;
   --color-input-text:     #0a0a0a;
   --color-input-placeholder: #9ca3af;
-  --color-input-focus-border: #c9a84c;
-  --color-input-focus-shadow: rgba(201, 168, 76, 0.2);
+  --color-input-focus-border: #0a0a0a;
+  --color-input-focus-shadow: rgba(10, 10, 10, 0.15);
 
   // Header
   --color-header-bg:      #ffffff;
@@ -87,26 +89,28 @@
   --color-text-secondary: #d1d5db;
   --color-text-muted:     #9ca3af;
   --color-text-inverse:   #0a0a0a;
-  --color-text-link:      #e2c472;
-  --color-text-link-hover: #c9a84c;
+  --color-text-link:      #f9fafb;
+  --color-text-link-hover: #d1d5db;
 
-  // Brand
+  // Brand — no separate accent hue in Figma, the brand is strictly
+  // black/white, so "accent" reuses the same primary-button black/white
+  // pair every other CTA on the site already uses.
   --color-brand-primary:  #16213e;
-  --color-brand-accent:   #c9a84c;
-  --color-brand-accent-light: #e2c472;
+  --color-brand-accent:   #ffffff;
+  --color-brand-accent-light: #d1d5db;
 
   // Borders
   --color-border:         #374151;
   --color-border-strong:  #4b5563;
-  --color-border-focus:   #c9a84c;
+  --color-border-focus:   #f9fafb;
 
   // Inputs
   --color-input-bg:       #1f2937;
   --color-input-border:   #374151;
   --color-input-text:     #f9fafb;
   --color-input-placeholder: #6b7280;
-  --color-input-focus-border: #c9a84c;
-  --color-input-focus-shadow: rgba(201, 168, 76, 0.25);
+  --color-input-focus-border: #f9fafb;
+  --color-input-focus-shadow: rgba(249, 250, 251, 0.2);
 
   // Header
   --color-header-bg:      #111827;

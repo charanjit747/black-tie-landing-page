@@ -28,10 +28,11 @@ export const palette = {
     dark:    '#0f0f1a',
   },
 
+  // No separate accent hue in Figma — the brand is strictly black/white.
   accent: {
-    DEFAULT: '#c9a84c',
-    light:   '#e2c472',
-    dark:    '#a8873a',
+    DEFAULT: '#181818',
+    light:   '#4b5563',
+    dark:    '#000000',
   },
 
   semantic: {

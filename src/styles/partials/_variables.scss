@@ -52,9 +52,11 @@ $color-gray-900:   #111827;
 $color-primary:       #1a1a2e;
 $color-primary-light: #16213e;
 $color-primary-dark:  #0f0f1a;
-$color-accent:        #c9a84c;
-$color-accent-light:  #e2c472;
-$color-accent-dark:   #a8873a;
+// No separate accent hue in Figma — the brand is strictly black/white,
+// so "accent" here is just the same neutral scale as everything else.
+$color-accent:        #181818;
+$color-accent-light:  #4b5563;
+$color-accent-dark:   #000000;
 
 // Semantic colors
 $color-success:  #10b981;

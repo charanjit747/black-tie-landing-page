@@ -10,16 +10,32 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  // Figma: 7 columns, #1d1d1d dividers at 10% opacity. color-mix keeps
-  // this on the existing --color-text-primary token (already flips
-  // dark/light near-black ↔ near-white per theme) rather than a new
-  // hardcoded color that would only read correctly in one theme.
-  background-image: linear-gradient(
-    to right,
-    color-mix(in srgb, var(--color-text-primary) 10%, transparent) 1px,
-    transparent 1px
-  );
-  background-size: calc(100% / 7) 100%;
+  overflow: hidden;
+}
+
+// 7 real elements (not a single background-image) so each can be
+// GSAP-animated independently — see initSectionBackgroundLinesAnimation
+// in utils/gsapAnimations.ts. `scaleY` (not `height`) is what that
+// animates, so `transform-origin: top` lives here as the CSS-side half
+// of that contract.
+.section-bg-lines__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  pointer-events: none;
+  // Figma: #1d1d1d dividers at 10% opacity. color-mix keeps this on the
+  // existing --color-text-primary token (already flips dark/light
+  // near-black ↔ near-white per theme) rather than a new hardcoded
+  // color that would only read correctly in one theme.
+  background-color: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  transform-origin: top center;
+
+  @for $i from 0 through 6 {
+    &:nth-child(#{$i + 1}) {
+      left: calc(#{$i} * (100% / 7));
+    }
+  }
 }
 
 // Ensures whatever comes after the lines layer (within the same

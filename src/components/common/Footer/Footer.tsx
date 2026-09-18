@@ -12,12 +12,11 @@ import { getLenis } from '@/providers/LenisProvider';
 // matching homepage section — same sections, same ids, as the header's
 // own nav (see NAV_LINKS in Header.tsx: Home→Hero, Marketplace→
 // Ecosystem, Partner with us→Our Partners, FAQs→FAQ). There's no
-// standalone /faqs, /marketplace, or /partner route in this app, so
-// these used to 404. "About" is the one real, separate page (see
-// src/app/(Pages)/about), so it keeps a plain href.
+// standalone /faqs, /marketplace, or /partner route in this app — the
+// landing page is the only page that exists, so every link here is an
+// in-page anchor.
 const NAV_LINKS = [
   { label: 'Home', href: '#home' },
-  { label: 'About', href: '/about' },
   { label: 'FAQs', href: '#faq' },
   { label: 'Marketplace', href: '#ecosystem' },
   { label: 'Partner with us', href: '#partners' },
@@ -141,8 +140,7 @@ export const Footer: React.FC = () => {
             <ul className="site-footer__nav-list">
               {NAV_LINKS.map(({ label, href }) => {
                 // Anchor links resolve against "/" when off-page (same as
-                // the header); "/about" is a real route and passes through
-                // unchanged.
+                // the header).
                 const resolvedHref = href.startsWith('#') && !isHome ? `/${href}` : href;
 
                 return (

@@ -116,6 +116,11 @@
 .ecosystem__slider {
   border-radius: 4rem;
   overflow: hidden;
+  // Without this, the slide art (mostly dark laptop mockups on a dark
+  // background) had no visible edge against the page's own dark bg in
+  // dark theme — the rounded corners were there but invisible with
+  // nothing to outline them.
+  border: 1px solid var(--color-border);
 
   @include respond-below('md') {
     border-radius: 2.4rem;
