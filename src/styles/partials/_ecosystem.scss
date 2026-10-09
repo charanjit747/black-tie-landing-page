@@ -1,6 +1,6 @@
 // ============================================================
 // _ecosystem.scss — Black Tie Real-World Asset Infrastructure
-// Ecosystem (vertical autoplay slider, 4 slides)
+// Ecosystem (autoplay slide-left slider, 4 slides)
 //
 // Each slide is one complete, pre-flattened image exported straight
 // out of Figma (see Ecosystem.tsx) — theme-invariant by nature, since
@@ -114,19 +114,7 @@
 }
 
 .ecosystem__slider {
-  border-radius: 4rem;
-  overflow: hidden;
-  // Without this, the slide art (mostly dark laptop mockups on a dark
-  // background) had no visible edge against the page's own dark bg in
-  // dark theme — the rounded corners were there but invisible with
-  // nothing to outline them.
-  border: 1px solid var(--color-border);
-
-  @include respond-below('md') {
-    border-radius: 2.4rem;
-  }
-
-  // react-slick's vertical mode measures each slide's height in JS at
+  // react-slick measures each slide's height in JS at
   // mount and caches it as an inline `height` style on .slick-list/
   // .slick-track — that cache doesn't reliably keep up with a
   // responsive aspect-ratio-driven height across a live viewport
@@ -140,15 +128,71 @@
   // track/slide/slide-inner wrappers get `auto` so they simply follow
   // their content's real (aspect-ratio-driven) height instead of a
   // cached number.
+  //
+  // The rounded frame lives on .slick-list (the actual slide viewport),
+  // not on the slider root — the root also holds the mobile dots, which
+  // sit below the frame, outside it.
   .slick-list {
     height: auto !important;
     aspect-ratio: 1873 / 840 !important;
+    border-radius: 4rem;
+    overflow: hidden;
+    // Without this, the slide art (mostly dark laptop mockups on a dark
+    // background) had no visible edge against the page's own dark bg in
+    // dark theme — the rounded corners were there but invisible with
+    // nothing to outline them.
+    border: 1px solid var(--color-border);
+
+    @include respond-below('md') {
+      border-radius: 2.4rem;
+    }
   }
 
   .slick-track,
   .slick-slide,
   .slick-slide > div {
     height: auto !important;
+  }
+
+  // Mobile-only dots (see responsive in Ecosystem.tsx), below the frame.
+  // slick-theme positions them absolutely at `bottom: -25px`; in normal
+  // flow instead so they take real space under the slider. Colors are
+  // theme tokens (not fixed white/black) since the page background
+  // flips between themes: muted --color-border-strong for idle dots,
+  // --color-brand-accent (black in light, white in dark) for the active.
+  .slick-dots {
+    @include flex(row, center, center);
+    // react-slick sets `style="display: block"` inline on this list —
+    // `!important` is the only way a stylesheet wins over that.
+    display: flex !important;
+    position: static;
+    gap: $spacing-xs;
+    margin: 0.4rem 0 0;
+    padding: 0;
+
+    li {
+      width: auto;
+      height: auto;
+      margin: 0;
+
+      button {
+        width: 8px;
+        height: 8px;
+        padding: 0;
+        border-radius: $radius-full;
+        background-color: var(--color-border-strong);
+        @include smooth-transition;
+
+        &::before {
+          display: none;
+        }
+      }
+
+      &.slick-active button {
+        width: 24px;
+        background-color: var(--color-brand-accent);
+      }
+    }
   }
 }
 

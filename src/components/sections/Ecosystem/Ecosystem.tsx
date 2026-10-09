@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import Slider, { Settings } from 'react-slick';
 import Container from 'react-bootstrap/Container';
@@ -25,8 +25,8 @@ const SLIDES = [
 
 // Plain react-slick settings (not the CommonSlider wrapper — that
 // component's own defaults are built for horizontal multi-card
-// carousels and kept overriding this single-slide vertical slider in
-// ways that were hard to fully suppress).
+// carousels and kept overriding this single-slide slider in ways that
+// were hard to fully suppress).
 const SLIDER_SETTINGS: Settings = {
   dots: false,
   arrows: false,
@@ -34,17 +34,31 @@ const SLIDER_SETTINGS: Settings = {
   autoplay: true,
   autoplaySpeed: 4000,
   speed: 800,
-  vertical: true,
-  verticalSwiping: true,
   slidesToShow: 1,
   slidesToScroll: 1,
   pauseOnHover: false,
   pauseOnFocus: false,
 };
 
+// Dots are mobile-only (≤767px, this project's `md` breakpoint) —
+// switched on in the component below from this media query. Not
+// react-slick's own `responsive` option: in 0.31 it only reacts when the
+// viewport crosses a breakpoint, never applying the matching one on
+// first load, so a page opened at phone width got no dots at all.
+const MOBILE_QUERY = '(max-width: 767px)';
+
+function subscribeMobile(onChange: () => void) {
+  const mql = window.matchMedia(MOBILE_QUERY);
+  mql.addEventListener('change', onChange);
+  return () => mql.removeEventListener('change', onChange);
+}
+
+const getIsMobile = () => window.matchMedia(MOBILE_QUERY).matches;
+const getIsMobileServer = () => false;
+
 // ── Component ────────────────────────────────────────────────
-// A vertical, autoplaying slick slider (moves up on each transition —
-// slick's own default direction for vertical mode). Each slide is a
+// An autoplaying slick slider that slides left on each transition
+// (slick's default horizontal direction). Each slide is a
 // fixed-height box (not sized off the image), with a shimmer
 // placeholder permanently underneath the image — so the slider's own
 // height calculation never depends on image load timing, and a
@@ -64,6 +78,7 @@ export const Ecosystem: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const ctaWrapRef = useRef<HTMLDivElement>(null);
+  const isMobile = useSyncExternalStore(subscribeMobile, getIsMobile, getIsMobileServer);
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -101,7 +116,7 @@ export const Ecosystem: React.FC = () => {
       </Container>
 
       <div className="ecosystem__wrap">
-        <Slider className="ecosystem__slider" {...SLIDER_SETTINGS}>
+        <Slider className="ecosystem__slider" {...SLIDER_SETTINGS} dots={isMobile}>
           {SLIDES.map((slide, index) => (
             <div key={slide.id} className="ecosystem__slide">
               <div className="ecosystem__slide-media">
