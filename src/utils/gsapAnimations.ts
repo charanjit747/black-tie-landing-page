@@ -734,10 +734,9 @@ export function initContactUsAnimation({
 }
 
 // ────────────────────────────────────────────────────────────
-// Custom Cursor — premium ring + dot that trails the pointer, fading
-// out over clickable elements so the native pointer cursor shows
-// through instead (see .custom-cursor / body cursor rules in
-// _custom-cursor.scss).
+// Custom Cursor — a ring that trails the pointer, drawn around the
+// native cursor (which stays visible), fading out over clickable
+// elements (see .custom-cursor in _custom-cursor.scss).
 //
 // Gated the same way as every other effect in this file — desktop-only,
 // min-width: 1280px — plus (hover: hover) and (pointer: fine) so a
@@ -749,20 +748,15 @@ export function initContactUsAnimation({
 const CURSOR_CLICKABLE_SELECTOR =
   'a, button, input, textarea, select, label, [role="button"], .btn-common';
 
-export function initCustomCursorAnimation(ring: HTMLElement, dot: HTMLElement): () => void {
+export function initCustomCursorAnimation(ring: HTMLElement): () => void {
   const mm = gsap.matchMedia();
 
   mm.add('(min-width: 1280px) and (hover: hover) and (pointer: fine)', () => {
-    gsap.set([ring, dot], { xPercent: -50, yPercent: -50 });
+    gsap.set(ring, { xPercent: -50, yPercent: -50 });
 
-    // The ring trails with a soft lag; the dot follows almost instantly
-    // right on top of the real pointer position — the combination is
-    // what reads as a deliberate, premium cursor rather than a plain
-    // 1:1 swap-in replacement.
+    // The ring trails the real pointer with a soft lag.
     const ringX = gsap.quickTo(ring, 'x', { duration: 0.45, ease: 'power3' });
     const ringY = gsap.quickTo(ring, 'y', { duration: 0.45, ease: 'power3' });
-    const dotX = gsap.quickTo(dot, 'x', { duration: 0.12, ease: 'power3' });
-    const dotY = gsap.quickTo(dot, 'y', { duration: 0.12, ease: 'power3' });
 
     let isVisible = false;
     let isOverClickable = false;
@@ -770,14 +764,11 @@ export function initCustomCursorAnimation(ring: HTMLElement, dot: HTMLElement): 
     const handleMove = (e: MouseEvent) => {
       ringX(e.clientX);
       ringY(e.clientY);
-      dotX(e.clientX);
-      dotY(e.clientY);
 
       // First movement reveals the cursor — avoids a flash at (0, 0)
       // before any real coordinate has arrived.
       if (!isVisible) {
         isVisible = true;
-        gsap.to(dot, { autoAlpha: 1, duration: 0.25, ease: 'power2.out' });
         if (!isOverClickable) {
           gsap.to(ring, { autoAlpha: 1, duration: 0.25, ease: 'power2.out' });
         }
@@ -807,11 +798,11 @@ export function initCustomCursorAnimation(ring: HTMLElement, dot: HTMLElement): 
     };
 
     // Hide entirely when the pointer leaves the viewport (e.g. off the
-    // top into the browser chrome) so a stray ring/dot never gets left
+    // top into the browser chrome) so a stray ring never gets left
     // sitting at the last known edge position.
     const handleLeaveWindow = () => {
       isVisible = false;
-      gsap.to([ring, dot], { autoAlpha: 0, duration: 0.2, ease: 'power2.out' });
+      gsap.to(ring, { autoAlpha: 0, duration: 0.2, ease: 'power2.out' });
     };
 
     window.addEventListener('mousemove', handleMove);
