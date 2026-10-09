@@ -1,5 +1,5 @@
 // ============================================================
-// _faq.scss — Frequently Asked Questions (accordion, 4 items)
+// _faq.scss — Frequently Asked Questions (accordion)
 //
 // Expand/collapse uses a CSS grid-template-rows 0fr → 1fr transition,
 // not a measured/animated height — the react-slick saga a few
@@ -27,6 +27,22 @@
   @include respond-below('md') {
     padding: $spacing-2xl 0;
   }
+
+  // Standalone /faq page: no hero above it.
+  &--page {
+    padding-top: 6rem;
+
+    @include respond-below('md') {
+      padding-top: 4rem;
+    }
+  }
+}
+
+// "Read More" (homepage) / "Return to Home" (/faq) below the list.
+.faq__more {
+  display: flex;
+  justify-content: center;
+  padding-top: $spacing-2xl;
 }
 
 .faq__header {
@@ -259,6 +275,17 @@
   color: #fff;
   margin: 0;
   padding: 0 2.8rem 2.3rem;
+
+  // One <p> per paragraph (see FaqList) — the global `p` color would
+  // otherwise win over the inherited white.
+  p {
+    margin: 0;
+    color: inherit;
+  }
+
+  p + p {
+    margin-top: 1rem;
+  }
 
   @include respond-below('lg') {
     padding: 0 $spacing-md $spacing-md;

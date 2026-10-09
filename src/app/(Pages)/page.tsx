@@ -32,7 +32,7 @@ export default function HomePage() {
       <Security />
       <WhatWeDo />
       <Ecosystem />
-      <FAQ />
+      <FAQ limit={4} readMoreHref="/faq" />
       <JoinCommunity />
       <ContactUs />
     </>

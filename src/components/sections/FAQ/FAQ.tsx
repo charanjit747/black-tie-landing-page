@@ -1,50 +1,41 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Container from 'react-bootstrap/Container';
 import { SectionBackgroundLines } from '@/components/common/SectionBackgroundLines';
+import { CommonButton } from '@/components/common/Button/CommonButton';
+import { FaqList } from '@/components/common/FaqList/FaqList';
 import { ArrowUpRightIcon } from '@/constants/icons';
+import { FAQS } from '@/constants/faqs';
 import { initFAQAnimation } from '@/utils/gsapAnimations';
 
-// ── Questions (matches Figma exactly) ─────────────────────────
-// Figma only has real answer copy authored for the 2nd question (the
-// one left open by default) — the other 3 are question-only rows with
-// no answer container at all in the file, not just a hidden/collapsed
-// one. Rather than fabricate specific claims about a live investment
-// platform's payment methods/asset eligibility, those three use the
-// same "Coming Soon" placeholder convention already established
-// elsewhere on this page (see the Ecosystem slider's Smart/Treasury
-// slides) until real copy is provided.
-const FAQS = [
-  {
-    question: 'What is the BT Asset Hub?',
-    answer: 'Content for this answer is coming soon.',
-  },
-  {
-    question: 'Who can invest in the BT Asset Hub?',
-    answer:
-      "Retail, wholesale, and institutional investors can invest, each fund has its own approved investor qualification which can be found in the fund's detail page.  Retail Investor - An individual investing their own funds without meeting specific wealth or income thresholds. Wholesale Investor - An individual or entity that meets certain financial thresholds, such as having net assets of over AUD 2.5 million or a gross income of at least AUD 250,000 per annum.",
-  },
-  {
-    question: 'What types of assets can be tokenized on the BT Asset Hub?',
-    answer: 'Content for this answer is coming soon.',
-  },
-  {
-    question: 'What payment methods are accepted for investments?',
-    answer: 'Content for this answer is coming soon.',
-  },
-] as const;
+interface FAQProps {
+  /** Show only the first N questions (e.g. the homepage teaser). Default: all. */
+  limit?: number;
+  /** When set, a "Read More" button linking here is shown below the list. */
+  readMoreHref?: string;
+  /** When set, a "Return to Home" button linking here is shown below the list. */
+  returnHomeHref?: string;
+  /** Index open on first render; `null` starts with everything collapsed. */
+  defaultOpenIndex?: number | null;
+  /** Render the shared column-line backdrop. Default: true. */
+  showBackgroundLines?: boolean;
+  className?: string;
+}
 
 // ── Component ────────────────────────────────────────────────
-// A single-open accordion (matches Figma's default state — the 2nd
-// item open, the rest collapsed). Expand/collapse uses a CSS grid-rows
-// 0fr→1fr transition rather than a measured/animated height (see the
-// react-slick height saga a few sections up — anything that needs a
-// pixel height measured in JS is fragile across breakpoints); grid-rows
-// animates to "however tall the content actually is" with no
-// measurement step at all.
-export const FAQ: React.FC = () => {
-  const [openIndex, setOpenIndex] = useState<number | null>(1);
+// The questions themselves live in constants/faqs.ts and the accordion
+// in common/FaqList, so any page can reuse them. Homepage: the first 4
+// plus a "Read More" button to /faq; the /faq page renders all of them.
+export const FAQ: React.FC<FAQProps> = ({
+  limit,
+  readMoreHref,
+  returnHomeHref,
+  defaultOpenIndex = 1,
+  showBackgroundLines = true,
+  className = '',
+}) => {
+  const items = limit ? FAQS.slice(0, limit) : FAQS;
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -59,8 +50,8 @@ export const FAQ: React.FC = () => {
   }, []);
 
   return (
-    <section id="faq" className="faq" ref={sectionRef}>
-      <SectionBackgroundLines />
+    <section id="faq" className={`faq${className ? ` ${className}` : ''}`} ref={sectionRef}>
+      {showBackgroundLines && <SectionBackgroundLines />}
       <Container>
         <div className="faq__header" ref={headerRef}>
           <span className="faq__tag">
@@ -72,39 +63,22 @@ export const FAQ: React.FC = () => {
           </h2>
         </div>
 
-        <div className="faq__list">
-          {FAQS.map((faq, index) => {
-            const isOpen = openIndex === index;
-            return (
-              <div
-                key={faq.question}
-                className={`faq__item${isOpen ? ' faq__item--open' : ''}`}
-                ref={(el) => {
-                  itemRefs.current[index] = el;
-                }}
-              >
-                <button
-                  type="button"
-                  className="faq__question"
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  aria-expanded={isOpen}
-                >
-                  <span className="faq__question-text">{faq.question}</span>
-                  <span className="faq__toggle" aria-hidden="true">
-                    <span className="faq__toggle-bar faq__toggle-bar--h" />
-                    <span className="faq__toggle-bar faq__toggle-bar--v" />
-                  </span>
-                </button>
+        <FaqList items={items} defaultOpenIndex={defaultOpenIndex} itemRefs={itemRefs} />
 
-                <div className="faq__answer-rows">
-                  <div className="faq__answer-inner">
-                    <p className="faq__answer">{faq.answer}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {(readMoreHref || returnHomeHref) && (
+          <div className="faq__more">
+            {readMoreHref && (
+              <CommonButton as="link" href={readMoreHref} variant="primary" size="lg">
+                Read More
+              </CommonButton>
+            )}
+            {returnHomeHref && (
+              <CommonButton as="link" href={returnHomeHref} variant="primary" size="lg">
+                Return to Home
+              </CommonButton>
+            )}
+          </div>
+        )}
       </Container>
     </section>
   );
