@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 
@@ -25,6 +26,22 @@ export function getLenis(): Lenis | null {
  * scroll-driven animation stay perfectly in sync on one clock.
  */
 export function LenisProvider({ children }: LenisProviderProps) {
+  const pathname = usePathname();
+  const previousPathname = useRef(pathname);
+
+  // Client-side navigation between pages (e.g. the homepage's "Read More"
+  // → /faq) kept the old scroll position: Next's own scroll-to-top
+  // doesn't reliably take with Lenis driving the scroll, which holds its
+  // own target position. Reset through Lenis itself, instantly. Skipped
+  // when the URL has a #hash (e.g. /faq → /#partners) — that jump to a
+  // section belongs to the nav link's own handling, not to top.
+  useEffect(() => {
+    if (previousPathname.current === pathname) return;
+    previousPathname.current = pathname;
+    if (window.location.hash) return;
+    lenisInstance?.scrollTo(0, { immediate: true, force: true });
+  }, [pathname]);
+
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
