@@ -7,8 +7,7 @@ import { initStatsCounterAnimation } from '@/utils/gsapAnimations';
 // ── Stats Config (matches Figma: Asset Offerings / Target Asset Value /
 // KYC-KYB Verified Participation / Supported Asset Classes) — each
 // `format` renders the counted value exactly as Figma has it at 0 and at
-// its final value (a leading-zero pad for "03", a "$"/"M+" wrap for
-// "$5M+", etc.) ──────────────────────────────────────────────────────
+// its final value (a "$"/"M+" wrap for "$5M+", a "%" suffix, etc.) ─────────
 const STATS = [
   {
     value: 10,
@@ -27,8 +26,8 @@ const STATS = [
   },
   {
     value: 3,
-    label: 'Supported Asset Classe',
-    format: (n: number) => String(Math.round(n)).padStart(2, '0'),
+    label: 'Supported Asset Classes',
+    format: (n: number) => String(Math.round(n)),
   },
 ] as const;
 

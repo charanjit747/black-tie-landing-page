@@ -216,6 +216,21 @@
   }
 }
 
+// Empire Summit's wordmark is narrower relative to its height than the
+// others, so at the shared 3.5rem it only reached ~110px wide — a taller
+// box gives it a comparable width.
+.partners__logo-wrap--large {
+  height: 5.6rem;
+
+  @include respond-below('narrow-desktop') {
+    height: 4.4rem;
+  }
+
+  @include respond-below('md') {
+    height: 3.4rem;
+  }
+}
+
 .partners__logo {
   width: auto;
   height: 100%;

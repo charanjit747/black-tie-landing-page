@@ -18,12 +18,6 @@ import { initPartnersMarqueeAnimation } from '@/utils/gsapAnimations';
 // as of this migration pass. Swap back to `${ASSETS_BASE_URL}/partners/...`
 // once that's fixed.
 const PARTNERS = [
-  { name: 'Blockly', src: '/assets/partners/blockly.png', width: 256, height: 70 },
-  { name: 'Architect', src: '/assets/partners/architect.png', width: 287, height: 70 },
-  { name: 'Techlify', src: '/assets/partners/techlify.png', width: 284, height: 70 },
-  { name: 'Cloudly', src: '/assets/partners/cloudly.png', width: 344, height: 70 },
-  { name: 'Logo', src: '/assets/partners/placeholder-logo.png', width: 306, height: 70 },
-  { name: 'Sisyphus', src: '/assets/partners/sisyphus.png', width: 246, height: 70 },
   { name: 'Hashlock', src: '/assets/partners/hashlock.png', width: 354, height: 70 },
   { name: 'Zendesk', src: '/assets/partners/zendesk.png', width: 323, height: 70 },
   { name: 'Kokoda Holdings', src: '/assets/partners/kokoda.png', width: 356, height: 70 },
@@ -31,10 +25,12 @@ const PARTNERS = [
   { name: 'Docusign', src: '/assets/partners/docusign.png', width: 347, height: 70 },
   { name: 'Sumsub', src: '/assets/partners/sumsub.png', width: 300, height: 70 },
   { name: 'Arizore', src: '/assets/partners/arizore.png', width: 440, height: 70, mono: true },
+  { name: 'RWA.xyz', src: '/assets/partners/rwa-xyz.svg', width: 301, height: 70 },
+  { name: 'Empire Summit', src: '/assets/partners/empire-summit.png', width: 231, height: 70, large: true },
 ] as const;
 
 // ── Component ────────────────────────────────────────────────
-// The track renders the 13 logos twice back to back, then GSAP loops
+// The track renders the 9 logos twice back to back, then GSAP loops
 // it from xPercent 0 to -50 forever (see initPartnersMarqueeAnimation
 // in utils/gsapAnimations.ts) — since the two halves are identical,
 // -50% lands exactly back on the start of the second half, which is
@@ -75,7 +71,10 @@ export const Partners: React.FC = () => {
             {[0, 1].map((copy) => (
               <div className="partners__set" aria-hidden={copy === 1} key={copy}>
                 {PARTNERS.map((partner) => (
-                  <div key={`${copy}-${partner.name}`} className="partners__logo-wrap">
+                  <div
+                    key={`${copy}-${partner.name}`}
+                    className={`partners__logo-wrap${'large' in partner && partner.large ? ' partners__logo-wrap--large' : ''}`}
+                  >
                     <Image
                       src={partner.src}
                       alt={copy === 0 ? partner.name : ''}
